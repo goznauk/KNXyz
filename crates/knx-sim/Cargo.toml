@@ -1,0 +1,19 @@
+[package]
+name = "knx-sim"
+version = "0.0.1"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+# Source-only in-process KNXnet/IP simulator for offline tests. publish = false:
+# it is a dev-dependency of knx-ip's tests and is never published to crates.io,
+# so its path dependencies intentionally carry no version requirement.
+publish = false
+description = "In-process KNXnet/IP simulator for KNXyz offline tests (not published)."
+
+[dependencies]
+knx-core = { path = "../knx-core" }
+knx-dpt = { path = "../knx-dpt" }
+knx-ip = { path = "../knx-ip" }
+thiserror.workspace = true
+tokio.workspace = true

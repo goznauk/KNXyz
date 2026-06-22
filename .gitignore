@@ -1,0 +1,8 @@
+target/
+node_modules/
+bindings/python/knxyz/*.so
+bindings/python/.venv/
+__pycache__/
+*.pyc
+dist/
+build/

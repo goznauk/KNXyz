@@ -1,0 +1,362 @@
+[
+  {
+    "name": "dpt1 switch off",
+    "dpt": "1.001",
+    "value": { "type": "bool", "value": false },
+    "bytes": [0]
+  },
+  {
+    "name": "dpt1 switch on",
+    "dpt": "1.001",
+    "value": { "type": "bool", "value": true },
+    "bytes": [1]
+  },
+  {
+    "name": "dpt2 controlled boolean",
+    "dpt": "2.001",
+    "value": { "type": "control_bool", "control": true, "value": false },
+    "bytes": [2]
+  },
+  {
+    "name": "dpt2 controlled boolean low boundary",
+    "dpt": "2.001",
+    "value": { "type": "control_bool", "control": false, "value": false },
+    "bytes": [0]
+  },
+  {
+    "name": "dpt2 controlled boolean high boundary",
+    "dpt": "2.001",
+    "value": { "type": "control_bool", "control": true, "value": true },
+    "bytes": [3]
+  },
+  {
+    "name": "dpt3 step control",
+    "dpt": "3.007",
+    "value": { "type": "step_control", "increase": true, "step_code": 3 },
+    "bytes": [11]
+  },
+  {
+    "name": "dpt3 decrease minimum step",
+    "dpt": "3.007",
+    "value": { "type": "step_control", "increase": false, "step_code": 0 },
+    "bytes": [0]
+  },
+  {
+    "name": "dpt3 increase maximum step",
+    "dpt": "3.007",
+    "value": { "type": "step_control", "increase": true, "step_code": 7 },
+    "bytes": [15]
+  },
+  {
+    "name": "dpt5 scaling minimum",
+    "dpt": "5.001",
+    "value": { "type": "scaling", "value": 0.0 },
+    "bytes": [0]
+  },
+  {
+    "name": "dpt5 scaling maximum",
+    "dpt": "5.001",
+    "value": { "type": "scaling", "value": 100.0 },
+    "bytes": [255]
+  },
+  {
+    "name": "dpt5 raw byte minimum",
+    "dpt": "5.010",
+    "value": { "type": "u8", "value": 0 },
+    "bytes": [0]
+  },
+  {
+    "name": "dpt5 raw byte midpoint",
+    "dpt": "5.010",
+    "value": { "type": "u8", "value": 128 },
+    "bytes": [128]
+  },
+  {
+    "name": "dpt5 raw byte maximum",
+    "dpt": "5.010",
+    "value": { "type": "u8", "value": 255 },
+    "bytes": [255]
+  },
+  {
+    "name": "dpt6 signed byte minimum",
+    "dpt": "6.010",
+    "value": { "type": "i8", "value": -128 },
+    "bytes": [128]
+  },
+  {
+    "name": "dpt6 signed byte",
+    "dpt": "6.010",
+    "value": { "type": "i8", "value": -5 },
+    "bytes": [251]
+  },
+  {
+    "name": "dpt6 signed byte maximum",
+    "dpt": "6.010",
+    "value": { "type": "i8", "value": 127 },
+    "bytes": [127]
+  },
+  {
+    "name": "dpt7 unsigned counter minimum",
+    "dpt": "7.001",
+    "value": { "type": "u16", "value": 0 },
+    "bytes": [0, 0]
+  },
+  {
+    "name": "dpt7 unsigned counter",
+    "dpt": "7.001",
+    "value": { "type": "u16", "value": 4660 },
+    "bytes": [18, 52]
+  },
+  {
+    "name": "dpt7 unsigned counter maximum",
+    "dpt": "7.001",
+    "value": { "type": "u16", "value": 65535 },
+    "bytes": [255, 255]
+  },
+  {
+    "name": "dpt8 signed delta minimum",
+    "dpt": "8.001",
+    "value": { "type": "i16", "value": -32768 },
+    "bytes": [128, 0]
+  },
+  {
+    "name": "dpt8 signed delta",
+    "dpt": "8.001",
+    "value": { "type": "i16", "value": -1234 },
+    "bytes": [251, 46]
+  },
+  {
+    "name": "dpt8 signed delta maximum",
+    "dpt": "8.001",
+    "value": { "type": "i16", "value": 32767 },
+    "bytes": [127, 255]
+  },
+  {
+    "name": "dpt9.001 temperature zero",
+    "dpt": "9.001",
+    "value": { "type": "temperature", "value": 0.0 },
+    "bytes": [0, 0]
+  },
+  {
+    "name": "dpt9.001 temperature room",
+    "dpt": "9.001",
+    "value": { "type": "temperature", "value": 21.0 },
+    "bytes": [12, 26]
+  },
+  {
+    "name": "dpt9.001 temperature negative",
+    "dpt": "9.001",
+    "value": { "type": "temperature", "value": -5.5 },
+    "bytes": [133, 218]
+  },
+  {
+    "name": "dpt10 weekday time minimum",
+    "dpt": "10.001",
+    "value": { "type": "time", "weekday": 0, "hour": 0, "minute": 0, "second": 0 },
+    "bytes": [0, 0, 0]
+  },
+  {
+    "name": "dpt10 weekday time",
+    "dpt": "10.001",
+    "value": { "type": "time", "weekday": 3, "hour": 12, "minute": 34, "second": 56 },
+    "bytes": [108, 34, 56]
+  },
+  {
+    "name": "dpt10 weekday time maximum",
+    "dpt": "10.001",
+    "value": { "type": "time", "weekday": 7, "hour": 23, "minute": 59, "second": 59 },
+    "bytes": [247, 59, 59]
+  },
+  {
+    "name": "dpt11 calendar date lower year",
+    "dpt": "11.001",
+    "value": { "type": "date", "year": 1990, "month": 1, "day": 1 },
+    "bytes": [1, 1, 90]
+  },
+  {
+    "name": "dpt11 calendar date",
+    "dpt": "11.001",
+    "value": { "type": "date", "year": 2024, "month": 5, "day": 15 },
+    "bytes": [15, 5, 24]
+  },
+  {
+    "name": "dpt11 calendar date upper year",
+    "dpt": "11.001",
+    "value": { "type": "date", "year": 2089, "month": 12, "day": 31 },
+    "bytes": [31, 12, 89]
+  },
+  {
+    "name": "dpt19 datetime lower bound no-weekday",
+    "dpt": "19.001",
+    "value": { "type": "datetime", "year": 1900, "month": 1, "day": 1, "weekday": 0, "hour": 0, "minute": 0, "second": 0 },
+    "bytes": [0, 1, 1, 0, 0, 0, 36, 0]
+  },
+  {
+    "name": "dpt19 datetime no-weekday (matches pinned set(datetime))",
+    "dpt": "19.001",
+    "value": { "type": "datetime", "year": 2024, "month": 6, "day": 15, "weekday": 0, "hour": 13, "minute": 45, "second": 30 },
+    "bytes": [124, 6, 15, 13, 45, 30, 36, 0]
+  },
+  {
+    "name": "dpt19 datetime with weekday (Saturday)",
+    "dpt": "19.001",
+    "value": { "type": "datetime", "year": 2024, "month": 6, "day": 15, "weekday": 6, "hour": 13, "minute": 45, "second": 30 },
+    "bytes": [124, 6, 15, 205, 45, 30, 32, 0]
+  },
+  {
+    "name": "dpt19 datetime hour 24",
+    "dpt": "19.001",
+    "value": { "type": "datetime", "year": 2000, "month": 1, "day": 1, "weekday": 0, "hour": 24, "minute": 0, "second": 0 },
+    "bytes": [100, 1, 1, 24, 0, 0, 36, 0]
+  },
+  {
+    "name": "dpt19 datetime upper bound",
+    "dpt": "19.001",
+    "value": { "type": "datetime", "year": 2155, "month": 12, "day": 31, "weekday": 0, "hour": 23, "minute": 59, "second": 59 },
+    "bytes": [255, 12, 31, 23, 59, 59, 36, 0]
+  },
+  {
+    "name": "dpt12 unsigned dword minimum",
+    "dpt": "12.001",
+    "value": { "type": "u32", "value": 0 },
+    "bytes": [0, 0, 0, 0]
+  },
+  {
+    "name": "dpt12 unsigned dword",
+    "dpt": "12.001",
+    "value": { "type": "u32", "value": 305419896 },
+    "bytes": [18, 52, 86, 120]
+  },
+  {
+    "name": "dpt12 unsigned dword maximum",
+    "dpt": "12.001",
+    "value": { "type": "u32", "value": 4294967295 },
+    "bytes": [255, 255, 255, 255]
+  },
+  {
+    "name": "dpt13 signed dword minimum",
+    "dpt": "13.001",
+    "value": { "type": "i32", "value": -2147483648 },
+    "bytes": [128, 0, 0, 0]
+  },
+  {
+    "name": "dpt13 signed dword",
+    "dpt": "13.001",
+    "value": { "type": "i32", "value": -123456 },
+    "bytes": [255, 254, 29, 192]
+  },
+  {
+    "name": "dpt13 signed dword maximum",
+    "dpt": "13.001",
+    "value": { "type": "i32", "value": 2147483647 },
+    "bytes": [127, 255, 255, 255]
+  },
+  {
+    "name": "dpt14 float zero",
+    "dpt": "14.000",
+    "value": { "type": "f32", "value": 0.0 },
+    "bytes": [0, 0, 0, 0]
+  },
+  {
+    "name": "dpt14 float",
+    "dpt": "14.000",
+    "value": { "type": "f32", "value": 1.5 },
+    "bytes": [63, 192, 0, 0]
+  },
+  {
+    "name": "dpt14 float negative",
+    "dpt": "14.000",
+    "value": { "type": "f32", "value": -1.0 },
+    "bytes": [191, 128, 0, 0]
+  },
+  {
+    "name": "dpt16 empty text",
+    "dpt": "16.000",
+    "value": { "type": "text14", "value": "" },
+    "bytes": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
+    "name": "dpt16 text",
+    "dpt": "16.000",
+    "value": { "type": "text14", "value": "knxyz" },
+    "bytes": [107, 110, 120, 121, 122, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+  },
+  {
+    "name": "dpt16 full text",
+    "dpt": "16.000",
+    "value": { "type": "text14", "value": "abcdefghijklmn" },
+    "bytes": [97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110]
+  },
+  {
+    "name": "dpt17 scene number minimum",
+    "dpt": "17.001",
+    "value": { "type": "scene_number", "value": 0 },
+    "bytes": [0]
+  },
+  {
+    "name": "dpt17 scene number",
+    "dpt": "17.001",
+    "value": { "type": "scene_number", "value": 7 },
+    "bytes": [7]
+  },
+  {
+    "name": "dpt17 scene number maximum",
+    "dpt": "17.001",
+    "value": { "type": "scene_number", "value": 63 },
+    "bytes": [63]
+  },
+  {
+    "name": "dpt18 scene control minimum",
+    "dpt": "18.001",
+    "value": { "type": "scene_control", "learn": false, "scene": 0 },
+    "bytes": [0]
+  },
+  {
+    "name": "dpt18 scene control",
+    "dpt": "18.001",
+    "value": { "type": "scene_control", "learn": true, "scene": 7 },
+    "bytes": [135]
+  },
+  {
+    "name": "dpt18 scene control maximum",
+    "dpt": "18.001",
+    "value": { "type": "scene_control", "learn": true, "scene": 63 },
+    "bytes": [191]
+  },
+  {
+    "name": "dpt20 hvac operating mode auto",
+    "dpt": "20.102",
+    "value": { "type": "hvac_mode", "value": 0 },
+    "bytes": [0]
+  },
+  {
+    "name": "dpt20 hvac operating mode comfort",
+    "dpt": "20.102",
+    "value": { "type": "hvac_mode", "value": 1 },
+    "bytes": [1]
+  },
+  {
+    "name": "dpt20 hvac operating mode building protection",
+    "dpt": "20.102",
+    "value": { "type": "hvac_mode", "value": 4 },
+    "bytes": [4]
+  },
+  {
+    "name": "dpt20 hvac controller mode auto",
+    "dpt": "20.105",
+    "value": { "type": "hvac_controller_mode", "value": 0 },
+    "bytes": [0]
+  },
+  {
+    "name": "dpt20 hvac controller mode emergency steam (contiguous max)",
+    "dpt": "20.105",
+    "value": { "type": "hvac_controller_mode", "value": 17 },
+    "bytes": [17]
+  },
+  {
+    "name": "dpt20 hvac controller mode nodem",
+    "dpt": "20.105",
+    "value": { "type": "hvac_controller_mode", "value": 20 },
+    "bytes": [20]
+  }
+]

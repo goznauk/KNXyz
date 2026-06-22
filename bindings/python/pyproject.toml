@@ -1,0 +1,17 @@
+[build-system]
+requires = ["maturin>=1,<2"]
+build-backend = "maturin"
+
+[project]
+name = "knxyz"
+version = "0.0.1"
+description = "KNX datapoint codecs and KNXnet/IP client bindings for Python."
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+[tool.maturin]
+# knxyz is the real package; the native module is knxyz._knxyz. The pure-python
+# package ships from this source root.
+module-name = "knxyz._knxyz"
+python-source = "."
+include = ["knxyz/**/*.py", "knxyz/py.typed"]

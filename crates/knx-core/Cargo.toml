@@ -1,0 +1,25 @@
+[package]
+name = "knx-core"
+version = "0.0.1"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+description = "Core KNX types: addresses, cEMI frames, and KNXnet/IP framing primitives."
+keywords = ["knx", "cemi", "knxnet-ip", "home-automation", "building-automation"]
+categories = ["network-programming", "parser-implementations"]
+
+[features]
+default = ["std"]
+std = []
+# `serde/alloc` is required so derived Serialize/Deserialize cover the
+# allocation-backed fields (e.g. `GroupTelegram`'s `Vec<u8>` payload).
+# `alloc` (not `std`) keeps the crate's no_std+alloc trajectory intact.
+serde = ["dep:serde", "serde/alloc"]
+
+[dependencies]
+serde = { workspace = true, optional = true }
+
+[dev-dependencies]
+proptest.workspace = true
+serde_json = "1"

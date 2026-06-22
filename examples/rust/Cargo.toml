@@ -1,0 +1,23 @@
+[package]
+name = "knxyz-rust-examples"
+version = "0.0.1"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[dependencies]
+knxyz = { path = "../../crates/knxyz" }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+
+[[bin]]
+name = "offline-dpt"
+path = "offline_dpt.rs"
+
+[[bin]]
+name = "group-read"
+path = "group_read.rs"
+
+[[bin]]
+name = "group-write"
+path = "group_write.rs"

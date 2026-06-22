@@ -1,0 +1,28 @@
+[workspace]
+resolver = "2"
+members = [
+  "crates/knxyz",
+  "crates/knx-core",
+  "crates/knx-dpt",
+  "crates/knx-ip",
+  "crates/knx-sim",
+  "bindings/node",
+  "bindings/python",
+]
+
+[workspace.package]
+edition = "2021"
+license = "MIT"
+repository = "https://github.com/goznauk/KNXyz"
+rust-version = "1.76"
+
+[workspace.dependencies]
+thiserror = "1"
+serde = { version = "1", default-features = false, features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["macros", "net", "rt-multi-thread", "time", "sync"] }
+bytes = "1"
+futures-core = "0.3"
+proptest = "1"
+clap = { version = "4", features = ["derive"] }
+tokio-stream = { version = "0.1", features = ["sync"] }

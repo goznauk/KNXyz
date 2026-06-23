@@ -18,6 +18,11 @@
       "default": "./src/index.ts"
     }
   },
+  "files": [
+    "src/index.ts",
+    "index.*.node",
+    "knxyz-node.*.node"
+  ],
   "scripts": {
     "build:native": "node scripts/build-native.mjs",
     "test": "npm run build:native && node --experimental-strip-types --test test/*.test.ts"

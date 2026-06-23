@@ -8,6 +8,7 @@ rust-version.workspace = true
 description = "KNXnet/IP client: tunnelling, routing, and discovery."
 keywords = ["knx", "knxnet-ip", "tunneling", "routing", "home-automation"]
 categories = ["network-programming"]
+exclude = ["tests/**"]
 
 [features]
 default = ["tokio"]

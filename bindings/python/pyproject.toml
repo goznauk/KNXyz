@@ -11,7 +11,8 @@ license = { text = "MIT" }
 
 [tool.maturin]
 # knxyz is the real package; the native module is knxyz._knxyz. The pure-python
-# package ships from this source root.
+# package ships from this source root. The Python sdist boundary is enforced by
+# the Cargo package include/exclude policy plus tools/package verification.
 module-name = "knxyz._knxyz"
 python-source = "."
 include = ["knxyz/**/*.py", "knxyz/py.typed"]

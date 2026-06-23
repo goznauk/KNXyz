@@ -1,8 +1,13 @@
 target/
 node_modules/
-bindings/python/knxyz/*.so
-bindings/python/.venv/
+.DS_Store
+.env
+.env.local
+*.node
 __pycache__/
 *.pyc
+.pytest_cache/
+.venv/
 dist/
 build/
+*.so

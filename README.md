@@ -4,6 +4,20 @@ KNXyz is a KNX library for Rust, Python, and Node.js.
 
 KNXyz is early software and unstable.
 
+## Install
+
+```sh
+cargo add knxyz
+```
+
+```sh
+pip install knxyz
+```
+
+```sh
+npm install @knxyz/knx
+```
+
 ## Usage
 
 KNXyz provides KNX datapoint (DPT) codecs and KNXnet/IP client building blocks

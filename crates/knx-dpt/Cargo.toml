@@ -1,9 +1,10 @@
 [package]
 name = "knx-dpt"
-version = "0.0.1"
+version = "0.0.2"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+authors.workspace = true
 rust-version.workspace = true
 description = "KNX datapoint type (DPT) encoding and decoding."
 keywords = ["knx", "dpt", "datapoint", "encoding", "home-automation"]

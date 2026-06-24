@@ -37,6 +37,6 @@
     "test": "npm run build:native && node --experimental-strip-types --test test/*.test.ts"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^3.3.4"
+    "@napi-rs/cli": "^3.7.2"
   }
 }

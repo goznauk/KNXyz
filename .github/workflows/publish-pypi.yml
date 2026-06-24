@@ -27,7 +27,7 @@ jobs:
 
       - name: Build Python artifacts
         working-directory: bindings/python
-        run: maturin build --sdist --wheel --release --out dist
+        run: maturin build --sdist --release --out dist
 
       - name: Verify publish artifacts
         run: python tools/package/verify_publish_artifacts.py --python-dist bindings/python/dist

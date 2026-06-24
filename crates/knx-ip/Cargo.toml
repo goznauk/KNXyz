@@ -1,9 +1,10 @@
 [package]
 name = "knx-ip"
-version = "0.0.1"
+version = "0.0.2"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
+authors.workspace = true
 rust-version.workspace = true
 description = "KNXnet/IP client: tunnelling, routing, and discovery."
 keywords = ["knx", "knxnet-ip", "tunneling", "routing", "home-automation"]
@@ -19,8 +20,8 @@ serde = ["dep:serde", "knx-core/serde", "knx-dpt/serde"]
 futures-core.workspace = true
 # path for local builds; version for crates.io packaging (both must be published
 # before knx-ip).
-knx-core = { path = "../knx-core", version = "0.0.1" }
-knx-dpt = { path = "../knx-dpt", version = "0.0.1" }
+knx-core = { path = "../knx-core", version = "0.0.2" }
+knx-dpt = { path = "../knx-dpt", version = "0.0.2" }
 serde = { workspace = true, optional = true }
 socket2 = "0.6"
 thiserror.workspace = true

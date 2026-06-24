@@ -1,8 +1,17 @@
 {
   "name": "@knxyz/knx",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "KNX datapoint codecs and KNXnet/IP client bindings for Node.js.",
   "license": "MIT",
+  "author": {
+    "name": "goznauk",
+    "email": "goznauk@naver.com",
+    "url": "https://github.com/goznauk"
+  },
+  "homepage": "https://knxyz.io",
+  "bugs": {
+    "url": "https://github.com/goznauk/KNXyz/issues"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/goznauk/KNXyz.git",
@@ -28,6 +37,6 @@
     "test": "npm run build:native && node --experimental-strip-types --test test/*.test.ts"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^3.3.4"
+    "@napi-rs/cli": "^3.7.2"
   }
 }

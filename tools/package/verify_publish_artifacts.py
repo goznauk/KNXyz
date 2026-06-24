@@ -17,7 +17,6 @@ from pathlib import Path
 
 
 PYTHON_FORBIDDEN = (
-    "/bindings/python/openknx/",
     "/bindings/python/tests/",
     "/crates/knx-core/tests/",
     "/crates/knx-dpt/tests/",

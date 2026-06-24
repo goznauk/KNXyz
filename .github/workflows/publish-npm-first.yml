@@ -1,0 +1,52 @@
+name: Publish npm first release
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    name: Build and publish @knxyz/knx to npm
+    runs-on: ubuntu-latest
+    environment: release-npm
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+          package-manager-cache: false
+
+      - name: Install Node dependencies
+        working-directory: bindings/node
+        run: npm ci
+
+      - name: Build native Node binding
+        working-directory: bindings/node
+        run: npm run build:native
+
+      - name: Test Node package
+        working-directory: bindings/node
+        run: npm test
+
+      - name: Check npm package contents
+        working-directory: bindings/node
+        run: npm pack --dry-run --json > /tmp/knxyz-npm-pack.json
+
+      - name: Verify npm publish artifacts
+        run: python3 tools/package/verify_publish_artifacts.py --node-pack-json /tmp/knxyz-npm-pack.json --node-package-json bindings/node/package.json
+
+      # One-time first-publish bridge: remove or replace this workflow with
+      # tokenless npm trusted publishing after @knxyz/knx@0.0.1 exists.
+      - name: Publish npm package with provenance
+        working-directory: bindings/node
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

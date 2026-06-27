@@ -207,7 +207,7 @@ fn non_numeric_and_overflow_parts_report_invalid_numeric() {
         Err(KnxError::InvalidAddress("invalid numeric address part"))
     );
     // 256 overflows the u8 field; parse fails before new() so we get the
-    // numeric-parse error, NOT the range message.
+    // numeric-parse error, not the range message.
     assert_eq!(
         "256.0.0".parse::<IndividualAddress>(),
         Err(KnxError::InvalidAddress("invalid numeric address part"))

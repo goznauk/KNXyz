@@ -173,7 +173,7 @@ fn response_payloads_above_threshold_use_three_byte_apdu() {
 
 #[test]
 fn empty_write_and_response_payloads_are_rejected() {
-    // POLICY: empty Write/Response payloads are ambiguous with the compact
+    // Payload rule: empty Write/Response payloads are ambiguous with the compact
     // one-byte zero on APDU decode (a 2-byte compact APDU always decodes back
     // to [0x00], never to empty), so they cannot round-trip distinctly and
     // are rejected at construction. [0x00] remains a valid compact payload.
@@ -212,7 +212,7 @@ fn read_empty_is_accepted_and_read_with_payload_is_rejected() {
 
 #[test]
 fn compact_zero_write_and_response_still_round_trip() {
-    // [0x00] is a valid one-byte value payload (NOT empty) and must still
+    // [0x00] is a valid one-byte value payload (not empty) and must still
     // encode (compact 2-byte APDU) and decode back to [0x00].
     for frame in [
         CemiFrame::group_value_write(src(), dst(), &[0x00]).unwrap(),

@@ -3,7 +3,7 @@
 Python-binding mirror of crates/knx-dpt/tests/dpt29_v64.rs. DPT29 (29.010 Wh /
 29.011 VAh / 29.012 VARh) decodes (decode-only) to a new I64 value. Because an
 i64 exceeds the JS safe-integer range (2^53), the binding marshals it as a
-DECIMAL STRING ({"type":"i64","value":"<decimal>"}), not a bare JSON number — so
+decimal string ({"type":"i64","value":"<decimal>"}), not a plain JSON number — so
 values up to i64::MAX survive losslessly. Encode is refused (decode-only).
 """
 
@@ -16,7 +16,7 @@ I64_MIN = -9223372036854775808  # 0x8000_0000_0000_0000
 
 
 def test_dpt29_decodes_to_i64_decimal_string():
-    # value is a STRING (precision-safe); all three energy subs decode identically
+    # value is a decimal string (precision-safe); all three energy subs decode identically
     for dpt in ("29.010", "29.011", "29.012"):
         assert ok.dpt.decode(dpt, bytes([0, 0, 0, 0, 0, 0, 0, 1])) == {
             "type": "i64",

@@ -54,7 +54,7 @@ fn dpt9_002_003_decode_via_float16_encode_stays_unsupported() {
             encode(dpt, DptValue::Temperature(5.0)),
             Err(DptError::UnsupportedDpt(dpt.to_owned())),
         );
-        // invalid payload length loud-fails
+        // invalid payload length returns InvalidLength
         assert!(matches!(
             decode(dpt, &[0x00]),
             Err(DptError::InvalidLength { .. })
@@ -169,7 +169,7 @@ fn dpt9_remaining_tail_decodes_via_float16_encode_stays_unsupported() {
             Err(DptError::UnsupportedDpt(dpt.to_owned())),
             "{dpt} encode (Temperature) must stay UnsupportedDpt",
         );
-        // invalid payload length loud-fails per sub
+        // invalid payload length returns InvalidLength per sub
         assert!(matches!(
             decode(dpt, &[0x00]),
             Err(DptError::InvalidLength { .. })

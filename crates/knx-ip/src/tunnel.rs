@@ -578,7 +578,7 @@ mod tests {
                 blue: 3,
                 white: 4,
             },
-            // DPT21/22 raw bitsets (decode-only) must also loud-fail here — a
+            // DPT21/22 raw bitsets (decode-only) must also be rejected here — a
             // decoded mask can never be silently inference-written.
             DptValue::Bitset8(0xFF),
             DptValue::Bitset16(0xFFFF),

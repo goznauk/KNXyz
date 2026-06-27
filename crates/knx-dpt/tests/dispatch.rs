@@ -2,7 +2,7 @@
 //! `knx_dpt::lib` — the exact routing the (uniform-codec-table) refactor
 //! must preserve, including the dpt5 (sub-typed) and dpt9 (only `.001`)
 //! special cases and the unsupported/parse-failure error behavior, on
-//! BOTH the encode and decode sides.
+//! both the encode and decode sides.
 
 use knx_dpt::{decode, encode, DptError, DptValue};
 
@@ -40,7 +40,7 @@ fn dpt9_001_temperature_encode_decode_and_weather_floats_decode_only() {
     // 9.002/9.003 Δ-temp/gradient + 9.004-9.008 weather/CO2 + 9.009-9.011
     // air-flow/time-period + 9.020/9.021 voltage/current + 9.022-9.030
     // power-density/K%/power-kW/volume-flow/rain/°F/wind-km·h/abs-humidity/
-    // concentration: DECODE-ONLY to the unit-agnostic Float16 variant (same
+    // concentration: decode-only to the unit-agnostic Float16 variant (same
     // 2-octet two's-complement codec, never Temperature).
     for dpt in [
         "9.002", "9.003", "9.004", "9.005", "9.006", "9.007", "9.008", "9.009", "9.010", "9.011",
@@ -51,15 +51,15 @@ fn dpt9_001_temperature_encode_decode_and_weather_floats_decode_only() {
             matches!(decode(dpt, &[0x0c, 0x1a]).unwrap(), DptValue::Float16(_)),
             "{dpt} must decode to Float16, not Temperature"
         );
-        // not writable via inference — a generic Float16 cannot select one
-        // 9.xxx sub-type, so encode loud-fails.
+        // not writable via inference: a generic Float16 cannot select one
+        // 9.xxx sub-type, so encode returns an error.
         assert_eq!(
             encode(dpt, DptValue::Float16(21.0)),
             Err(DptError::UnsupportedDpt(dpt.to_owned()))
         );
     }
     // A DPT9 sub with no codec (e.g. 9.019, in the reserved 9.012-9.019 gap)
-    // still falls through to the unsupported wildcard on BOTH directions.
+    // still falls through to the unsupported wildcard in both directions.
     assert_eq!(
         encode("9.019", DptValue::Temperature(21.0)),
         Err(DptError::UnsupportedDpt("9.019".to_owned()))
@@ -173,7 +173,7 @@ fn dpt20_operating_and_controller_modes_are_distinct() {
         );
     }
 
-    // byte 5 is a valid controller mode (Precool) but NOT a valid 20.102
+    // byte 5 is a valid controller mode (Precool) but not a valid 20.102
     // operating mode (max 4) - the two sub-types do not alias.
     assert_eq!(decode("20.105", &[5]), Ok(DptValue::HvacControllerMode(5)));
     assert!(matches!(

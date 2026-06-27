@@ -14,7 +14,7 @@ use knx_dpt::{decode, encode, DptError, DptValue};
 #[test]
 fn dpt30_decode_is_unsupported_regardless_of_payload_width() {
     // Every payload width - including the 4 octets a B32 codec would consume -
-    // must be rejected at DISPATCH (main 30 has no codec), NOT decoded. The
+    // must be rejected at dispatch (main 30 has no codec), not decoded. The
     // 4-octet case is the load-bearing pin: it proves no accidental Bitset32
     // codec exists.
     let payloads: [&[u8]; 6] = [
@@ -64,7 +64,7 @@ fn dpt30_neighbour_subs_stay_unsupported() {
 #[test]
 fn dpt30_bitset_family_neighbours_stay_unsupported() {
     // the other structured / bit-set-adjacent mains the repo deliberately leaves
-    // unsupported (23/26/27) must stay refused in BOTH directions — only 21/22
+    // unsupported (23/26/27) must stay refused in both directions — only 21/22
     // were ever added.
     for dpt in ["23.001", "26.001", "27.001"] {
         assert_eq!(

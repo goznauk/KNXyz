@@ -2,11 +2,11 @@
 
 Python-binding mirror of crates/knx-dpt/tests/dpt21_dpt22_bitset.rs. DPT21 is a
 fixed 1-octet "8-bit set" and DPT22 a fixed 2-octet (big-endian) "16-bit set".
-The wire width is fixed by the main number, so the RAW mask decodes honestly
-without external per-bit wire-layout evidence (per-bit meaning is a separate
-semantic layer this codec deliberately does NOT claim; decode is sub-agnostic).
+The wire width is fixed by the main number, so the raw mask decodes without
+external per-bit wire-layout evidence. Per-bit meaning is a separate semantic
+layer this codec does not claim; decode is sub-agnostic.
 The masks are JS-safe (u16::MAX = 65535 < 2^53), so the binding marshals them as
-a BARE JSON number ({"type":"bitset8","value":<u8>} / {"type":"bitset16",...}),
+a plain JSON number ({"type":"bitset8","value":<u8>} / {"type":"bitset16",...}),
 unlike DPT29's precision-safe decimal string. Encode is refused (decode-only).
 """
 
@@ -52,10 +52,10 @@ def test_dpt21_dpt22_wrong_length_returns_invalid_length():
 
 
 def test_dpt21_dpt22_are_decode_only_encode_refused():
-    # the bitset8/bitset16 JSON shapes DO parse (from-json arms exist for
+    # the bitset8/bitset16 JSON shapes parse (from-json arms exist for
     # round-trip/marshal), but the keyed encode still refuses — mains 21/22 are
     # absent from the codec table. The error is "unsupported datapoint type"
-    # (parse succeeded), NOT "unsupported DPT JSON value type" (which would mean
+    # (parse succeeded), not "unsupported DPT JSON value type" (which would mean
     # the from-json arm is missing).
     with pytest.raises(ValueError, match="unsupported datapoint type"):
         ok.dpt.encode("21.001", {"type": "bitset8", "value": 255})

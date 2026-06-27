@@ -1,17 +1,16 @@
-//! DPT 21.xxx / 22.xxx — KNX B8 / B16 raw bit sets, DECODE-ONLY.
+//! DPT 21.xxx / 22.xxx — KNX B8 / B16 raw bit sets, decode-only.
 //!
 //! DPT21 is a fixed 1-octet "8-bit set" and DPT22 a fixed 2-octet (big-endian)
 //! "16-bit set". The wire width is fixed by the main number, so the raw mask is
-//! decoded honestly WITHOUT any external per-bit wire-layout evidence — the
-//! per-bit meaning is a separate semantic layer this codec deliberately does NOT
-//! claim. Decode is therefore sub-agnostic (every sub of a main shares the
+//! decoded as a raw mask. Per-bit meaning is a separate semantic layer outside
+//! this codec. Decode is therefore sub-agnostic (every sub of a main shares the
 //! mask), routing to `DptValue::Bitset8` / `DptValue::Bitset16`.
 //!
-//! Encode is intentionally NOT provided — mains 21/22 are absent from the
+//! Encode is intentionally not provided: mains 21/22 are absent from the
 //! uniform table (so `encode("21.xxx"/"22.xxx", …)` stays `UnsupportedDpt`), and
-//! the `Bitset8`/`Bitset16` variants additionally loud-fail in `knx-ip`'s
-//! `encode_value` (decode-only isolation invariant — reusing the writable `U8`
-//! [→ "5.010"] or `U16` [→ "7.001"] variants would have broken that isolation).
+//! the `Bitset8`/`Bitset16` variants are also rejected in `knx-ip`'s
+//! `encode_value`. Reusing the writable `U8` [→ "5.010"] or `U16` [→ "7.001"]
+//! variants would make decoded bit masks writable through the wrong DPT.
 //!
 //! These tests pin the decode vectors (incl. byte-order on DPT22), the length
 //! contract, the unsupported encode, and the unsupported neighbouring mains.
@@ -89,8 +88,8 @@ fn dpt21_dpt22_wrong_length_loud_fails() {
 
 #[test]
 fn dpt21_dpt22_are_decode_only_encode_unsupported() {
-    // decode-only: keyed encode loud-fails (mains 21/22 are not in the uniform
-    // table and have no encode arm). The Bitset8/Bitset16 variants are ALSO
+    // decode-only: keyed encode returns an error because mains 21/22 are not in
+    // the uniform table and have no encode arm. The Bitset8/Bitset16 variants are also
     // refused by knx-ip encode_value (covered by a knx-ip test), so a decoded
     // value is never silently written.
     for dpt in ["21.001", "21.100"] {
@@ -111,7 +110,7 @@ fn dpt21_dpt22_are_decode_only_encode_unsupported() {
 
 #[test]
 fn dpt21_dpt22_unsupported_neighbour_mains_stay_unsupported() {
-    // mains 23/26/27/30 stay unsupported in BOTH directions; only mains 21/22
+    // mains 23/26/27/30 stay unsupported in both directions; only mains 21/22
     // were added (24 is a variable-length string, also unsupported).
     for dpt in ["23.001", "26.001", "27.001", "30.001"] {
         assert_eq!(

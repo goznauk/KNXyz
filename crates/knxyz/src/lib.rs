@@ -25,7 +25,7 @@
 /// KNX data point type (DPT) encoding and decoding.
 ///
 /// Re-exported from the `knx-dpt` crate: [`encode`](knx_dpt::encode) /
-/// [`decode`](knx_dpt::decode) are pure, offline byte transforms.
+/// [`decode`](knx_dpt::decode) are pure payload byte transforms.
 pub mod dpt {
     pub use knx_dpt::{decode, encode, DptError, DptValue, Result};
 }
@@ -35,9 +35,10 @@ pub use knx_dpt::DptValue;
 
 /// KNXnet/IP client building blocks.
 ///
-/// Re-exported from the `knx-ip` crate: connect a [`TunnelClient`](knx_ip::TunnelClient)
-/// to a KNXnet/IP interface to read group values, or [`discover_gateways`](knx_ip::discover_gateways)
-/// to find interfaces on the local network.
+/// Re-exported from the `knx-ip` crate: connect a
+/// [`TunnelClient`](knx_ip::TunnelClient) to a KNXnet/IP interface to read
+/// group values, or use [`discover_gateways`](knx_ip::discover_gateways) to find
+/// interfaces on the local network.
 ///
 /// ```no_run
 /// # async fn read_one() -> Result<(), Box<dyn std::error::Error>> {

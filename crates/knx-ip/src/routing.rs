@@ -215,7 +215,7 @@ impl RouteSender {
     /// encoder the tunnel write path uses (so encoding stays centralized
     /// in knx-ip; the binding does no DPT work). Routing is connectionless
     /// multicast: this is a single fire-and-forget send (no ACK), and the
-    /// frame is an L_Data.indication (the routing wire form), NOT the
+    /// frame is an L_Data.indication (the routing wire form), not the
     /// L_Data.request that `CemiFrame::group_value_write` stamps.
     pub async fn send_group_write(
         &self,

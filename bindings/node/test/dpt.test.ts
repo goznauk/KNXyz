@@ -50,7 +50,7 @@ describe("KNXyz Node parity fixtures", () => {
 
   it("decodes DPT 29 V64 as a precision-safe i64 decimal string", () => {
     // i64 exceeds JS Number.MAX_SAFE_INTEGER (2^53), so the binding emits a
-    // decimal STRING, not a bare number. BigInt(value) reconstructs it exactly.
+    // decimal string, not a plain number. BigInt(value) reconstructs it exactly.
     const max = decodeDpt("29.010", Uint8Array.of(0x7f, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff));
     assert.deepEqual(max, { type: "i64", value: "9223372036854775807" });
     assert.equal(BigInt((max as { value: string }).value), 9223372036854775807n);
@@ -61,7 +61,7 @@ describe("KNXyz Node parity fixtures", () => {
     const distinct = decodeDpt("29.012", Uint8Array.of(0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08));
     assert.equal(BigInt((distinct as { value: string }).value), 72623859790382856n);
 
-    // decode-only: encode is refused, and a short payload loud-fails
+    // decode-only: encode is refused, and a short payload returns an error
     assert.throws(() => encodeDpt("29.010", { type: "i64", value: "1000" }), /unsupported datapoint type/);
     assert.throws(() => decodeDpt("29.010", Uint8Array.of(0, 0, 0, 0, 0, 0, 0)), /invalid payload length/);
   });
@@ -77,26 +77,26 @@ describe("KNXyz Node parity fixtures", () => {
     assert.throws(() => encodeDpt("4.001", { type: "char", value: "A" }), /unsupported datapoint type/);
   });
 
-  it("decodes DPT 21 / 22 raw bit sets as a bare mask (decode-only)", () => {
+  it("decodes DPT 21 / 22 raw bit sets as a plain mask (decode-only)", () => {
     // DPT21 = fixed 1-octet B8, DPT22 = fixed 2-octet big-endian B16; the raw
     // mask decodes sub-agnostically (per-bit meaning is not claimed). Masks are
-    // JS-safe (<= 65535), so they cross as a bare number, not a string.
+    // JS-safe (<= 65535), so they cross as a plain number, not a string.
     assert.deepEqual(decodeDpt("21.001", Uint8Array.of(0xa5)), { type: "bitset8", value: 165 });
     assert.deepEqual(decodeDpt("21.100", Uint8Array.of(0xff)), { type: "bitset8", value: 255 });
     // big-endian: first octet is the high byte (distinct bytes lock the order)
     assert.deepEqual(decodeDpt("22.101", Uint8Array.of(0xa5, 0x5a)), { type: "bitset16", value: 0xa55a });
     assert.deepEqual(decodeDpt("22.100", Uint8Array.of(0x00, 0x00)), { type: "bitset16", value: 0 });
     // decode-only: keyed encode is refused (parse succeeds, encode has no arm),
-    // and a wrong-length payload loud-fails
+    // and a wrong-length payload returns an error
     assert.throws(() => encodeDpt("21.001", { type: "bitset8", value: 255 }), /unsupported datapoint type/);
     assert.throws(() => encodeDpt("22.101", { type: "bitset16", value: 65535 }), /unsupported datapoint type/);
     assert.throws(() => decodeDpt("21.001", Uint8Array.of(0x00, 0x00)), /invalid payload length/);
     assert.throws(() => decodeDpt("22.101", Uint8Array.of(0x00)), /invalid payload length/);
   });
 
-  it("round-trips DPT 232.600 RGB through the offline codec", () => {
-    // encode is the OFFLINE pure codec (no bus); live colour writes stay refused
-    // at knx-ip encode_value (pinned in that crate).
+  it("round-trips DPT 232.600 RGB through the payload codec", () => {
+    // encode is the pure DPT payload codec; live colour writes stay refused at
+    // knx-ip encode_value (pinned in that crate).
     const encoded = encodeDpt("232.600", { type: "rgb", red: 10, green: 20, blue: 30 });
     assert.deepEqual([...encoded], [0x0a, 0x14, 0x1e]);
     assert.deepEqual(decodeDpt("232.600", encoded), { type: "rgb", red: 10, green: 20, blue: 30 });
@@ -110,7 +110,7 @@ describe("KNXyz Node parity fixtures", () => {
       () => encodeDpt("251.600", { type: "rgbw", red: 1, green: 2, blue: 3, white: 4 }),
       /unsupported datapoint type/,
     );
-    // regression: the shipped RGB 232.600 offline codec is unaffected
+    // regression: the shipped RGB 232.600 DPT payload codec is unaffected
     assert.deepEqual(decodeDpt("232.600", Uint8Array.of(0x0a, 0x14, 0x1e)), {
       type: "rgb",
       red: 10,
@@ -131,14 +131,14 @@ describe("KNXyz Node parity fixtures", () => {
     const I32_MAX = 2147483647;
     const U32_MAX = 4294967295;
 
-    // energy_i32: a VALID i32 (incl. the negative -> sign handling) is parsed by
+    // energy_i32: a valid i32 (incl. the negative -> sign handling) is parsed by
     // json_i32, then encode refuses it under a signed 13.xxx id. The refusal is
-    // TypeMismatch ("datapoint value type does not match"), NOT the
+    // TypeMismatch ("datapoint value type does not match"), not the
     // "unsupported datapoint type" message used for unknown ids -- matching it
     // proves the parse succeeded and the refusal came from the encoder.
-    // The energy_i32 refusal now uses the NON-energy 13.001 counter: the four
-    // energy subs (13.010/13.013/13.014/13.015) now offline-encode energy_i32
-    // (covered in the switched-subs test below). A VALID i32 (incl. the negative
+    // The energy_i32 refusal now uses the non-energy 13.001 counter: the four
+    // energy subs (13.010/13.013/13.014/13.015) now payload-encode energy_i32
+    // (covered in the switched-subs test below). A valid i32 (incl. the negative
     // -> sign handling) is parsed by json_i32, then encode refuses it.
     assert.throws(() => encodeDpt("13.001", { type: "energy_i32", value: 0 }), /datapoint value type does not match/);
     assert.throws(() => encodeDpt("13.001", { type: "energy_i32", value: I32_MAX }), /datapoint value type does not match/);
@@ -148,8 +148,8 @@ describe("KNXyz Node parity fixtures", () => {
     assert.throws(() => encodeDpt("13.010", { type: "energy_i32", value: I32_MAX + 1 }), /out of i32 range/);
     assert.throws(() => encodeDpt("13.010", { type: "energy_i32", value: "x" }), /expected signed DPT value/);
 
-    // energy_u32 is carried by an UNSIGNED main (12.001), not DPT13. u32::MAX
-    // crosses as a BARE number (4294967295 < Number.MAX_SAFE_INTEGER) -- no
+    // energy_u32 is carried by an unsigned main (12.001), not DPT13. u32::MAX
+    // crosses as a plain number (4294967295 < Number.MAX_SAFE_INTEGER) -- no
     // decimal string (contrast the i64 case above) -- is parsed by json_u32,
     // then encode refuses it (TypeMismatch dpt 12.xxx).
     assert.throws(() => encodeDpt("12.001", { type: "energy_u32", value: 0 }), /datapoint value type does not match/);
@@ -163,10 +163,10 @@ describe("KNXyz Node parity fixtures", () => {
     assert.throws(() => encodeDpt("13.010", { type: "energy", value: 1 }), /unsupported DPT JSON value type/);
   });
 
-  it("switches DPT13 13.010/13.013/13.014/13.015 to semantic energy_i32 decode + offline encode", () => {
+  it("switches DPT13 13.010/13.013/13.014/13.015 to semantic energy_i32 decode + payload encode", () => {
     // The four energy subs (Wh/kWh/VAh/VARh) decode to {type:"energy_i32"} (every
-    // other 13.xxx, incl. the 13.001 counter, stays {type:"i32"}). The offline
-    // encode arm accepts BOTH energy_i32 (symmetric with decode) and i32 (backward
+    // other 13.xxx, incl. the 13.001 counter, stays {type:"i32"}). The payload
+    // encode arm accepts both energy_i32 (symmetric with decode) and i32 (backward
     // compat) -> identical bytes. energy_u32 stays refused (never a DPT13
     // value). Live energy writes stay refused at knx-ip encode_value (unchanged).
     const POS = Uint8Array.of(0x00, 0x00, 0x03, 0xe8); // 1000
@@ -176,7 +176,7 @@ describe("KNXyz Node parity fixtures", () => {
       // decode -> energy_i32
       assert.deepEqual(decodeDpt(dpt, POS), { type: "energy_i32", value: 1000 });
       assert.deepEqual(decodeDpt(dpt, NEG), { type: "energy_i32", value: -1000 });
-      // offline encode: energy_i32 round-trips, and i32 still encodes (same bytes)
+      // payload encode: energy_i32 round-trips, and i32 still encodes (same bytes)
       assert.deepEqual([...encodeDpt(dpt, { type: "energy_i32", value: 1000 })], [0x00, 0x00, 0x03, 0xe8]);
       assert.deepEqual([...encodeDpt(dpt, { type: "i32", value: 1000 })], [0x00, 0x00, 0x03, 0xe8]);
       // energy_u32 stays refused even for the switched subs (not a DPT13 candidate)

@@ -42,14 +42,14 @@ def test_dpt_9_001_temperature_matches_rust_parity_fixture():
 
 def test_dpt_9_008_co2_ppm_decodes_via_the_2octet_float():
     # a related DPT-9 datapoint: 9.008 (CO2/air-quality
-    # ppm) shares the DPT-9 2-octet float codec and is DECODE-ONLY (the unit
+    # ppm) shares the DPT-9 2-octet float codec and is decode-only (the unit
     # is carried by the DPT id; CO2 is never tagged as temperature).
     assert dpt.decode("9.008", bytes([0x2D, 0x78])) == pytest.approx(448.0, abs=0.5)
     assert dpt.decode("9.008", bytes([0x01, 0xF4])) == pytest.approx(5.0, abs=1e-3)
     # decode-only: encode raises (a generic float cannot infer the sub)
     with pytest.raises(ValueError):
         dpt.encode("9.008", 448.0)
-    # invalid length is loud, not a silent/garbage value
+    # invalid length returns an error, not a silent/garbage value
     with pytest.raises(ValueError):
         dpt.decode("9.008", bytes([0x00]))
 
@@ -162,7 +162,7 @@ def test_dpt_20_105_hvac_controller_mode_round_trips():
 
 
 def test_dpt_20_105_rejects_reserved_and_out_of_range():
-    # 18/19 are KNX-reserved; 21+ are undefined - all loud-fail.
+    # 18/19 are KNX-reserved; 21+ are undefined, so all are rejected.
     for bad in (18, 19, 21, 255):
         with pytest.raises(ValueError):
             dpt.encode("20.105", {"type": "hvac_controller_mode", "value": bad})

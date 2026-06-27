@@ -13,7 +13,7 @@ use knx_dpt::{decode, encode, DptError, DptValue};
 #[test]
 fn dpt251_600_decode_is_unsupported() {
     // representative 6-octet RGBW-shaped payload + the empty slice: both must
-    // be rejected at dispatch (main 251 has no codec), NOT silently decoded
+    // be rejected at dispatch (main 251 has no codec), not silently decoded
     // onto a mask-less Rgbw.
     for bytes in [&[0x0A, 0x14, 0x1E, 0x28, 0x00, 0x0F][..], &[]] {
         assert_eq!(

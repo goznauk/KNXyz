@@ -442,13 +442,13 @@ fn unconfirmed_category_identifiers_stay_unsupported() {
         encode("energy-unsigned.unconfirmed", DptValue::EnergyU32(1)),
         Err(DptError::UnsupportedDpt(_))
     ));
-    // DPT29 V64 is decode-only: the I64 variant never encodes (a single variant
-    // cannot infer a 29.xxx sub), so encode loud-fails regardless of the id.
+    // DPT29 V64 is decode-only: the I64 variant never encodes because a single
+    // variant cannot infer a 29.xxx sub.
     assert!(matches!(
         encode("v64.unconfirmed", DptValue::I64(1)),
         Err(DptError::UnsupportedDpt(_))
     ));
-    // DPT4 Char is decode-only: encode loud-fails (no encode arm), so a decoded
+    // DPT4 Char is decode-only: encode returns an error, so a decoded
     // character can never be re-encoded to a wrong main.
     assert!(matches!(
         encode("char.unconfirmed", DptValue::Char('A')),

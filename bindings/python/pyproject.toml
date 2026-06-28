@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "knxyz"
-version = "0.0.2"
+version = "0.0.3"
 description = "KNX datapoint codecs and KNXnet/IP client bindings for Python."
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -21,4 +21,9 @@ Repository = "https://github.com/goznauk/KNXyz"
 # the Cargo package include/exclude policy plus tools/package verification.
 module-name = "knxyz._knxyz"
 python-source = "."
-include = ["knxyz/**/*.py", "knxyz/py.typed"]
+include = [
+  "knxyz/**/*.py",
+  "knxyz/**/*.pxd",
+  "knxyz/include/**/*.h",
+  "knxyz/py.typed",
+]

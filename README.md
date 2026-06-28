@@ -107,6 +107,16 @@ let value = dpt::decode("9.001", &payload)?;                       // -> Tempera
 
 See [examples/](examples/README.md) for the full runnable examples in each language.
 
+### Native extension interfaces
+
+Cython extensions can cimport `knxyz.capi` from the installed Python package.
+See [examples/python/cython/](examples/python/cython/) for a small smoke example
+that uses the Python wheel's PyCapsule C API to encode and decode DPT `9.001`
+temperature.
+
+The Rust `knxyz` facade crate also exposes a small raw C ABI for C and C++
+consumers that build and link `libknxyz` from source.
+
 ## Documentation
 
 - [Architecture](docs/architecture.md)

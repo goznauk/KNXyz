@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 #![allow(clippy::useless_conversion)]
 
+use std::ffi::CString;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::pin::Pin;
 use std::str::FromStr;
@@ -14,9 +15,10 @@ use knx_ip::{
     ConnectionEvent, DiscoveryOptions, GroupEvent, RouteEvent, RouteMonitor, RouteSender,
     RoutingOptions, RoutingSendOptions, TunnelClient, TunnelOptions,
 };
+use knxyz::capi;
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
-use pyo3::types::PyBytes;
+use pyo3::types::{PyBytes, PyCapsule};
 use serde::Serialize;
 use serde_json::Value;
 use tokio::runtime::Runtime;
@@ -732,6 +734,12 @@ fn _knxyz(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(discover_gateways_json, m)?)?;
     m.add_class::<NativeTunnelClient>()?;
     m.add_class::<NativeRouteClient>()?;
+    let capsule_name =
+        CString::new("knxyz._knxyz._C_API").expect("static capsule name contains no nul bytes");
+    m.add(
+        "_C_API",
+        PyCapsule::new_bound(m.py(), capi::capi_v1(), Some(capsule_name))?,
+    )?;
 
     Ok(())
 }

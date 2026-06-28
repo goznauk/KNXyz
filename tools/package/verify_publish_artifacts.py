@@ -47,14 +47,19 @@ PYTHON_SDIST_REQUIRED_SUFFIXES = (
     "/crates/knx-dpt/src/lib.rs",
     "/crates/knx-ip/Cargo.toml",
     "/crates/knx-ip/src/lib.rs",
+    "/crates/knxyz/include/knxyz/capi.h",
     "/knxyz/__init__.py",
     "/knxyz/dpt.py",
+    "/knxyz/capi.pxd",
+    "/knxyz/include/knxyz/capi.h",
     "/knxyz/py.typed",
 )
 
 PYTHON_WHEEL_REQUIRED = (
     "knxyz/__init__.py",
     "knxyz/dpt.py",
+    "knxyz/capi.pxd",
+    "knxyz/include/knxyz/capi.h",
     "knxyz/py.typed",
 )
 
@@ -73,7 +78,7 @@ NODE_FORBIDDEN_EXACT = {
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--python-dist", type=Path)
+    parser.add_argument("--python-dist", "--python-dir", dest="python_dist", type=Path)
     parser.add_argument("--node-pack-json", type=Path)
     parser.add_argument("--node-package-json", type=Path)
     args = parser.parse_args()

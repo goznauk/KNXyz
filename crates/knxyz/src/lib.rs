@@ -20,7 +20,15 @@
 //! # Ok::<(), knxyz::dpt::DptError>(())
 //! ```
 
-#![forbid(unsafe_code)]
+// The raw C ABI uses exported symbol attributes. Keep unsafe operations denied
+// while avoiding a crate-level unsafe-code ban that rejects those attributes.
+#![deny(unsafe_op_in_unsafe_fn)]
+
+/// Small raw C ABI for KNX datapoint codec calls.
+///
+/// ABI v1 exposes DPT `9.001` temperature encode/decode with C-compatible
+/// result structs.
+pub mod capi;
 
 /// KNX data point type (DPT) encoding and decoding.
 ///
@@ -59,8 +67,9 @@ pub use knx_dpt::DptValue;
 /// ```
 pub mod ip {
     pub use knx_ip::{
-        discover_gateways, DiscoveryOptions, Gateway, KnxIpError, Result, TunnelClient,
-        TunnelOptions, KNXNET_IP_PORT,
+        discover_gateways, DiscoveryOptions, Gateway, KnxIpError, Result, RouteEvent, RouteMonitor,
+        RouteSender, RoutingOptions, RoutingSendOptions, TunnelClient, TunnelOptions,
+        DEFAULT_ROUTING_MULTICAST, DEFAULT_ROUTING_PORT, KNXNET_IP_PORT,
     };
 }
 

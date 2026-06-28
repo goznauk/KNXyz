@@ -1,8 +1,14 @@
 import asyncio
 import json
+from pathlib import Path
 
 from . import _knxyz
 from . import dpt
+
+
+def get_include() -> str:
+    """Return the installed include directory for Cython C API consumers."""
+    return str(Path(__file__).with_name("include"))
 
 
 def parse_individual_address(value: str) -> str:

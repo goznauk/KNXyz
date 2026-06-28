@@ -37,6 +37,16 @@ examples:
   handles this.
 - Rust: `use knxyz::{dpt, DptValue};`.
 
+### Cython
+
+Cython extensions can cimport `knxyz.capi` and use the Python wheel's PyCapsule
+C API. The example in `examples/python/cython/` builds a `.pyx` module, imports
+the capsule table, and exercises DPT `9.001` temperature encode/decode.
+
+KNXyz also exposes a small raw C ABI from the Rust `knxyz` facade crate for C
+and C++ consumers that build and link `libknxyz` from source. The raw C ABI is
+separate from the Python package PyCapsule path.
+
 ## KNXnet/IP examples
 
 KNXyz includes a KNXnet/IP client in all three languages. Connect a tunnel to an

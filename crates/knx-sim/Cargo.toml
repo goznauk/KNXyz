@@ -1,6 +1,6 @@
 [package]
 name = "knx-sim"
-version = "0.0.3"
+version = "0.0.4"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
@@ -10,7 +10,7 @@ rust-version.workspace = true
 # it is a dev-dependency of knx-ip's tests and is never published to crates.io,
 # so its path dependencies intentionally carry no version requirement.
 publish = false
-description = "In-process KNXnet/IP simulator for KNXyz offline tests (not published)."
+description = "In-process KNXnet/IP simulator for KNXyz loopback tests (not published)."
 exclude = ["tests/**"]
 
 [dependencies]

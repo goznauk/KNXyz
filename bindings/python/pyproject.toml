@@ -4,7 +4,7 @@ build-backend = "maturin"
 
 [project]
 name = "knxyz"
-version = "0.0.3"
+version = "0.0.4"
 description = "KNX datapoint codecs and KNXnet/IP client bindings for Python."
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -12,6 +12,7 @@ authors = [{ name = "goznauk", email = "goznauk@naver.com" }]
 
 [project.urls]
 Homepage = "https://knxyz.io"
+Documentation = "https://knxyz.io"
 Issues = "https://github.com/goznauk/KNXyz/issues"
 Repository = "https://github.com/goznauk/KNXyz"
 

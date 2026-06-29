@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "knxyz-cython-smoke"
-version = "0.0.3"
+version = "0.0.4"
 description = "Cython cimport smoke for the KNXyz PyCapsule C API."
 requires-python = ">=3.10"
 license = { text = "MIT" }

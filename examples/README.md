@@ -1,20 +1,21 @@
 # Examples
 
-Runnable KNXyz examples, from a source checkout. KNXyz covers KNX datapoint
-codecs and KNXnet/IP client building blocks; the datapoint examples need no KNX
-hardware, and the KNXnet/IP examples are default-safe (dry-run) until you opt in.
+Runnable KNXyz examples from a source checkout.
 
-## Offline examples
+The DPT examples work with KNX payload bytes. KNXnet/IP examples include dry-run
+commands and can also connect to a gateway when you provide a host, group
+address, and DPT.
 
-The offline DPT examples encode and decode datapoint values from local bytes
-only - no network, no KNX hardware. Each one prints the value, the encoded bytes
-(hex), and the decoded value, and verifies the round-trip locally.
+## DPT codec examples
 
-- Python: `python examples/python/offline_dpt.py`
-- Node.js: `examples/node/offline-dpt.ts` (build the native addon first - see
+The DPT examples encode and decode datapoint values. Each one prints the value,
+the encoded bytes as hex, and the decoded value, then verifies the round trip.
+
+- Python: `python examples/python/dpt_codec.py`
+- Node.js: `examples/node/dpt-codec.ts` (build the native addon first; see
   Language notes)
-- Rust: `examples/rust/offline_dpt.rs`
-  (`cargo run --manifest-path examples/rust/Cargo.toml --bin offline-dpt`)
+- Rust: `examples/rust/dpt_codec.rs`
+  (`cargo run --manifest-path examples/rust/Cargo.toml --bin dpt-codec`)
 
 ## Running from source
 
@@ -26,7 +27,7 @@ examples:
   example. The native addon build is exercised in CI.
 - Rust: `examples/rust` is a small standalone Cargo package that depends on the
   public `knxyz` facade by path. Run it with
-  `cargo run --manifest-path examples/rust/Cargo.toml --bin offline-dpt`.
+  `cargo run --manifest-path examples/rust/Cargo.toml --bin dpt-codec`.
 
 ## Language notes
 
@@ -55,23 +56,22 @@ interface and read a group value with `connect_tunnel(host=...)` /
 (Node.js), or `knxyz::ip::TunnelClient::connect(...)` / `group_read(...)` (Rust).
 `discover_gateways()` finds interfaces on the local network.
 
-These examples are default-safe: a plain run performs no bus I/O - it prints the
-telegram it would send (a dry run) and opens no socket. A live read or write is
-opt-in, requires an explicit host you control, group address, and DPT, and
-refuses documentation placeholder hosts; writes also require an explicit value.
-The exact flags are in each example's source.
+The group read and group write examples print dry-run output unless live-mode
+arguments are provided. To connect to a gateway, provide the host, group address,
+and DPT; writes also take the value to send. The exact flags are in each
+example's source.
 
 Read a group value:
 
 - Python: `examples/python/group_read.py`
 - Node.js: `examples/node/group-read.ts`
 - Rust: `examples/rust/group_read.rs`
-  (`cargo run --manifest-path examples/rust/Cargo.toml --bin group-read -- --dry-run`)
+  (`cargo run --manifest-path examples/rust/Cargo.toml --bin group-read`)
 
-Write a group value (opt-in, isolated test bus only). The Rust write example is
-a boolean DPT 1.001 write:
+Write a group value. The runnable write examples demonstrate a DPT 1.001
+boolean write:
 
 - Python: `examples/python/group_write.py`
 - Node.js: `examples/node/group-write.ts`
 - Rust: `examples/rust/group_write.rs`
-  (`cargo run --manifest-path examples/rust/Cargo.toml --bin group-write -- --dry-run`)
+  (`cargo run --manifest-path examples/rust/Cargo.toml --bin group-write`)

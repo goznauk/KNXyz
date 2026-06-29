@@ -1,0 +1,46 @@
+---
+title: Datapoint codecs
+description: Encode and decode KNX datapoint values.
+---
+
+Datapoint codecs convert between application values and KNX payload bytes.
+
+A DPT id identifies the KNX datapoint type. For example, `9.001` is the
+temperature variant of the DPT 9 two-byte float family.
+
+The common API shape across packages is:
+
+- encode a DPT id and value into payload bytes
+- decode a DPT id and payload bytes into a value
+- return an error for unsupported DPT ids or invalid payloads
+
+DPT `9.001` temperature is used throughout the quickstart because it has a
+compact two-byte payload and is easy to verify by round trip.
+
+For `21.0`, the encoded payload is `0c1a`.
+
+| Package | Value shape | Payload shape |
+| --- | --- | --- |
+| Rust | `DptValue::Temperature(21.0)` | `Vec<u8>` |
+| Python | `21.0` | `bytes` |
+| Node.js | `21.0` | `Uint8Array` |
+
+## Implementation status
+
+KNX defines many datapoint types. KNXyz currently implements selected DPTs in
+the high-level Rust, Python, and Node.js APIs. The raw C ABI and Cython native
+API are intentionally narrower and expose DPT `9.001` temperature only.
+
+| DPT | Meaning | Rust | Python | Node.js | C ABI | Cython | Notes |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `1.001` | Switch | yes | yes | yes | - | - | Boolean encode/decode. |
+| `5.001` | Scaling | yes | yes | yes | - | - | Percent scaling encode/decode. |
+| `9.001` | Temperature | yes | yes | yes | yes | yes | Native APIs expose this DPT only. |
+| `9.004` | Illuminance | decode | decode | decode | - | - | High-level decode support. |
+| `9.007` | Humidity | decode | decode | decode | - | - | High-level decode support. |
+| `17.001` | Scene number | yes | yes | yes | - | - | Scene number encode/decode. |
+| `18.001` | Scene control | yes | yes | yes | - | - | Scene control encode/decode. |
+| other KNX DPTs | Standard DPTs | partial | partial | partial | - | - | More coverage planned. |
+
+Unsupported DPT ids, invalid payload lengths, and values outside the supported
+range return package-specific errors.

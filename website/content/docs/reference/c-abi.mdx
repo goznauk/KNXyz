@@ -1,0 +1,60 @@
+---
+title: C ABI
+description: Raw C ABI for C and C++ consumers.
+---
+
+KNXyz exposes a small raw C ABI from the Rust `knxyz` facade crate.
+
+The C ABI is for C and C++ consumers that build and link the `knxyz` facade
+crate output.
+
+## Header
+
+```c
+#include <stdint.h>
+#include <knxyz/capi.h>
+```
+
+## Version
+
+```c
+uint32_t version = knxyz_capi_abi_version();
+```
+
+The current ABI version is `1`.
+
+## DPT 9.001 temperature encode
+
+```c
+knxyz_dpt9_001_encode_result_t result =
+    knxyz_dpt9_001_encode_f32(21.0f);
+
+if (result.status == KNXYZ_STATUS_OK) {
+    uint8_t b0 = result.payload.bytes[0];
+    uint8_t b1 = result.payload.bytes[1];
+}
+```
+
+The encoded bytes for `21.0` are `0c1a`.
+
+## DPT 9.001 temperature decode
+
+```c
+knxyz_dpt9_001_decode_result_t result =
+    knxyz_dpt9_001_decode_f32(0x0c, 0x1a);
+
+if (result.status == KNXYZ_STATUS_OK) {
+    float value = result.value;
+}
+```
+
+## Status codes
+
+- `KNXYZ_STATUS_OK`
+- `KNXYZ_STATUS_INVALID_VALUE`
+- `KNXYZ_STATUS_OUT_OF_RANGE`
+- `KNXYZ_STATUS_INTERNAL_ERROR`
+
+## Scope
+
+The raw C ABI covers DPT `9.001` temperature encode/decode.

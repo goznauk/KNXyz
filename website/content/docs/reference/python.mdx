@@ -1,0 +1,31 @@
+---
+title: Python
+description: Python package surface for KNXyz.
+---
+
+Install and import the Python package as `knxyz`.
+
+```python
+from knxyz import dpt
+
+payload = dpt.encode("9.001", 21.0)
+value = dpt.decode("9.001", payload)
+```
+
+The package includes DPT codecs and KNXnet/IP helpers.
+
+```python
+from knxyz import connect_tunnel, discover_gateways
+
+gateways = await discover_gateways(timeout_ms=1500)
+
+client = await connect_tunnel(host="192.0.2.10")
+try:
+    value = await client.read("1/0/0", "9.001")
+    await client.write("1/2/3", True, "1.001")
+finally:
+    await client.close()
+```
+
+See the [datapoint codec quickstart](/docs/quickstart/datapoint-codec) and
+[KNXnet/IP quickstart](/docs/quickstart/knxnet-ip) for the main flows.

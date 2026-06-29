@@ -1,0 +1,43 @@
+---
+title: Datapoint codec quickstart
+description: Encode and decode a KNX temperature value.
+---
+
+KNX datapoint type `9.001` represents temperature. The examples below encode
+`21.0` into the KNX payload `0c1a` and decode it back.
+
+## Rust
+
+```rust
+use knxyz::{dpt, DptValue};
+
+let payload = dpt::encode("9.001", DptValue::Temperature(21.0))?;
+assert_eq!(payload, vec![0x0c, 0x1a]);
+
+let value = dpt::decode("9.001", &payload)?;
+assert_eq!(value, DptValue::Temperature(21.0));
+```
+
+## Python
+
+```python
+from knxyz import dpt
+
+payload = dpt.encode("9.001", 21.0)
+assert payload.hex() == "0c1a"
+
+value = dpt.decode("9.001", payload)
+assert value == 21.0
+```
+
+## Node.js
+
+```ts
+import { encodeDpt, decodeDpt } from "@knxyz/knx";
+
+const payload = encodeDpt("9.001", 21.0);
+console.assert(Buffer.from(payload).toString("hex") === "0c1a");
+
+const value = decodeDpt("9.001", payload);
+console.assert(value === 21.0);
+```

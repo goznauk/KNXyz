@@ -1,0 +1,12 @@
+{
+  "title": "KNXyz",
+  "pages": [
+    "index",
+    "install",
+    "---Guides---",
+    "quickstart",
+    "reference",
+    "examples",
+    "releases"
+  ]
+}

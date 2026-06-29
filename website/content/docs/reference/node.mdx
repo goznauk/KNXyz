@@ -1,0 +1,37 @@
+---
+title: Node.js
+description: Node.js and TypeScript package surface for KNXyz.
+---
+
+The Node.js package is published as `@knxyz/knx`.
+
+```ts
+import { encodeDpt, decodeDpt } from "@knxyz/knx";
+
+const payload = encodeDpt("9.001", 21.0);
+const value = decodeDpt("9.001", payload);
+```
+
+The package includes TypeScript declarations for the public exports, including
+DPT helpers, address helpers, gateway discovery, and tunnel client helpers.
+
+```ts
+import { connectTunnel, discoverGateways } from "@knxyz/knx";
+
+const gateways = await discoverGateways({ timeoutMs: 1500 });
+
+const client = await connectTunnel({ host: "192.0.2.10" });
+try {
+  const value = await client.read("1/0/0", "9.001");
+  await client.write("1/2/3", true, "1.001");
+} finally {
+  await client.close();
+}
+```
+
+Public export groups include:
+
+- DPT helpers: `encodeDpt`, `decodeDpt`
+- address helpers: `parseGroupAddress`, `formatGroupAddress`,
+  `parseIndividualAddress`, `formatIndividualAddress`
+- KNXnet/IP helpers: `discoverGateways`, `connectTunnel`

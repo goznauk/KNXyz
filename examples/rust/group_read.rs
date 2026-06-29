@@ -1,12 +1,8 @@
-//! KNXyz example - group READ (DEFAULT-SAFE: dry-run).
+//! KNXyz example: group read.
 //!
-//! SAFETY: a `GroupValueRead` is an ACTIVE bus telegram (it solicits the bus),
-//! so this example performs NO bus I/O by default: it prints what it WOULD read
-//! and exits WITHOUT opening a socket. A live read is advanced (Tier 2): it
-//! requires `--live`, `KNXYZ_EXAMPLE_ALLOW_LIVE=1`, and explicit
-//! `--gateway-host`/`--group-address`/`--dpt`, and refuses to run under CI.
-//! NEVER point this at a production or shared KNX bus.
-//! See examples/README.md.
+//! The default run is a dry run. Live mode requires `--live`,
+//! `KNXYZ_EXAMPLE_ALLOW_LIVE=1`, and explicit gateway, group address, and DPT
+//! arguments. Placeholder hosts are rejected. See examples/README.md.
 
 use std::net::SocketAddr;
 use std::time::Duration;
@@ -25,7 +21,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
             .cloned()
     };
 
-    // a documentation placeholder host (RFC 5737 TEST-NET); refused in live mode
+    // Dry-run output uses a documentation placeholder host.
     let gateway_host = value_of("--gateway-host");
     let group_address_arg = value_of("--group-address");
     let dpt_arg = value_of("--dpt");
@@ -48,9 +44,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         println!(
             "DRY-RUN: would read GA={group_address} as DPT={dpt} from {host} \
              (no connection made).\n\
-             For a REAL read from a gateway you own / are authorized to test, pass:\n  \
+             For a live read, pass:\n  \
              --live --gateway-host <host:port> --group-address <ga> --dpt 9.001\n  \
-             and set KNXYZ_EXAMPLE_ALLOW_LIVE=1. Never target a production/shared bus."
+             and set KNXYZ_EXAMPLE_ALLOW_LIVE=1."
         );
         return Ok(());
     }
@@ -70,7 +66,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("LIVE: reading GA={group_address} as DPT={dpt} from {host}...");
     let mut client = TunnelClient::connect(gateway).await?;
     let result = client.group_read(group, &dpt, Duration::from_secs(3)).await;
-    let _ = client.disconnect().await; // best-effort teardown regardless of outcome
+    let _ = client.disconnect().await; // close the tunnel regardless of the read result
     println!("{:?}", result?);
     Ok(())
 }
@@ -84,11 +80,41 @@ fn is_ci() -> bool {
 /// Refuse RFC 5737 TEST-NET / RFC 3849 documentation ranges and symbolic
 /// `<...>` placeholder tokens as live targets.
 fn is_placeholder_host(host: &str) -> bool {
-    let h = host.split(':').next().unwrap_or(host);
+    let normalized = host.trim_start_matches('[');
+    if normalized.starts_with("2001:db8") {
+        return true;
+    }
+
+    let h = normalized
+        .split(']')
+        .next()
+        .unwrap_or(normalized)
+        .split(':')
+        .next()
+        .unwrap_or(normalized);
+
     h.starts_with("192.0.2.")
         || h.starts_with("198.51.100.")
         || h.starts_with("203.0.113.")
-        || h.starts_with("2001:db8")
         || h.contains("example")
         || h.starts_with('<')
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rejects_documentation_and_placeholder_hosts() {
+        assert!(is_placeholder_host("[2001:db8::1]:3671"));
+        assert!(is_placeholder_host("2001:db8::1"));
+        assert!(is_placeholder_host("192.0.2.10:3671"));
+        assert!(is_placeholder_host("example-gateway.local"));
+        assert!(is_placeholder_host("<gateway-host>"));
+    }
+
+    #[test]
+    fn accepts_private_ipv4_hosts() {
+        assert!(!is_placeholder_host("10.0.0.5:3671"));
+    }
 }

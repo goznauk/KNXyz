@@ -1,16 +1,10 @@
 /**
- * KNXyz example - group WRITE (DEFAULT-SAFE: dry-run).
+ * KNXyz example: boolean group write, DPT 1.001.
  *
- * SAFETY: by default this performs NO bus I/O. It prints the telegram it WOULD
- * write and exits WITHOUT opening a socket (it does not even load the native
- * binding on the default path). A real live write is advanced-only and
- * ISOLATED-BUS-ONLY: it requires ALL of `--live`,
- * `KNXYZ_EXAMPLE_ALLOW_LIVE_WRITE=1`, `--confirm ISOLATED_TEST_BUS_ONLY`, and
- * explicit `--gateway-host`/`--group-address`/`--dpt`/`--value`; it refuses
- * documentation hosts and refuses to run under CI. The live path closes the
- * tunnel in a `finally` block with `client.close()`. NEVER point this at a
- * production or shared KNX bus. Live writes require an explicit gateway host and
- * an opt-in environment variable. See examples/README.md.
+ * The default run is a dry run. Live mode requires `--live`,
+ * `KNXYZ_EXAMPLE_ALLOW_LIVE_WRITE=1`, the confirmation flag, and all telegram
+ * arguments. Placeholder hosts are rejected, and the live tunnel is closed in a
+ * `finally` block. See examples/README.md.
  */
 
 function arg(name: string): string | undefined {
@@ -27,16 +21,33 @@ function isCi(): boolean {
   return ci !== "" && ci !== "0" && ci !== "false";
 }
 
-// RFC 5737 TEST-NET / RFC 3849 documentation ranges + symbolic tokens; refused live
+// RFC 5737 TEST-NET / RFC 3849 documentation ranges and placeholder tokens.
 function isPlaceholderHost(host: string): boolean {
+  const normalized = host.startsWith("[") ? host.slice(1) : host;
   return (
-    host.startsWith("192.0.2.") ||
-    host.startsWith("198.51.100.") ||
-    host.startsWith("203.0.113.") ||
-    host.startsWith("2001:db8") ||
-    host.includes("example") ||
-    host.startsWith("<")
+    normalized.startsWith("192.0.2.") ||
+    normalized.startsWith("198.51.100.") ||
+    normalized.startsWith("203.0.113.") ||
+    normalized.startsWith("2001:db8") ||
+    normalized.includes("example") ||
+    normalized.startsWith("<")
   );
+}
+
+function parseBooleanWriteValue(dpt: string, value: string): boolean {
+  if (dpt !== "1.001") {
+    throw new Error(`this example demonstrates DPT 1.001 boolean writes; got ${dpt}`);
+  }
+
+  const lowered = value.toLowerCase();
+  if (lowered === "true") {
+    return true;
+  }
+  if (lowered === "false") {
+    return false;
+  }
+
+  throw new Error(`this example accepts only --value true or --value false; got ${value}`);
 }
 
 async function main(): Promise<void> {
@@ -46,9 +57,8 @@ async function main(): Promise<void> {
   const value = arg("--value");
   const port = Number(arg("--port") ?? "3671");
 
-  // A live write also requires EVERY telegram parameter explicitly (no silent
-  // default GA/DPT/value on the live path); any missing factor falls back to
-  // dry-run (fail-closed).
+  // Live writes require every telegram parameter explicitly; otherwise the
+  // example stays on the dry-run path.
   const armed =
     has("--live") &&
     process.env.KNXYZ_EXAMPLE_ALLOW_LIVE_WRITE === "1" &&
@@ -59,43 +69,46 @@ async function main(): Promise<void> {
     value !== undefined;
 
   if (!armed) {
-    // a documentation placeholder host (RFC 5737 TEST-NET); never contacted here
+    // Dry-run output uses a documentation placeholder host.
     const host = gatewayHost ?? "203.0.113.10";
     console.log(
       `DRY-RUN: would write GA=${groupAddress ?? "1/2/3"} DPT=${dpt ?? "1.001"} ` +
         `value=${value ?? "true"} to ${host}:${port} (no connection made).`,
     );
     console.log(
-      "For a REAL write on an ISOLATED test bus ONLY, pass --live " +
+      "For a live write, pass --live " +
         "--confirm ISOLATED_TEST_BUS_ONLY --gateway-host <host> --group-address <ga> " +
         "--dpt 1.001 --value true and set KNXYZ_EXAMPLE_ALLOW_LIVE_WRITE=1. " +
-        "NEVER target a production/shared bus.",
+        "The confirmation flag is required for write examples.",
     );
     return;
   }
 
-  // live path: advanced, isolated-bus-only, fail-closed
+  // Live path: require explicit arguments, confirmation, environment variable,
+  // and non-placeholder host.
   if (isCi()) {
     throw new Error("refusing a live write under CI");
   }
   if (isPlaceholderHost(gatewayHost as string)) {
     throw new Error(
       "refusing a live write to a documentation host; pass " +
-        "--gateway-host for your own isolated test gateway",
+        "--gateway-host for your gateway",
     );
   }
 
-  // load the native binding ONLY on the armed live path
+  const parsedValue = parseBooleanWriteValue(dpt as string, value as string);
+
+  // Load the native binding only on the armed live path.
   const { connectTunnel } = await import("@knxyz/knx");
   console.log(
-    `LIVE: writing ${value} to GA=${groupAddress} on ${gatewayHost} (ISOLATED test bus)...`,
+    `LIVE: writing ${parsedValue} as DPT=${dpt} to GA=${groupAddress} on ${gatewayHost}...`,
   );
   const client = await connectTunnel({ host: gatewayHost, port });
   try {
-    await client.write(groupAddress as string, value === "true", dpt as string);
+    await client.write(groupAddress as string, parsedValue, dpt as string);
     console.log("done");
   } finally {
-    // orderly best-effort teardown, sends no write
+    // Close the tunnel regardless of the write result.
     await client.close();
   }
 }

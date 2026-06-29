@@ -12,10 +12,9 @@ the Rust APIs. `knxyz` is the primary public crate.
   framing primitives. Kept small and no-std-friendly where practical.
 - `crates/knx-dpt`: datapoint type (DPT) encoding and decoding, with shared
   Node/Python parity fixtures.
-- `crates/knx-ip`: a Tokio-based KNXnet/IP client (discovery, tunnelling, and
-  routing).
-- `crates/knx-sim`: an in-process simulated gateway used by the transport tests
-  instead of hardware (not published).
+- `crates/knx-ip`: a Tokio-based KNXnet/IP client for discovery, tunnelling, and
+  routing.
+- `crates/knx-sim`: an unpublished in-process simulated gateway for transport tests.
 - `bindings/python`: a PyO3 native module exposed as the `knxyz` Python package.
 - `bindings/node`: a napi-rs native module exposed as the `@knxyz/knx` package.
 
@@ -34,10 +33,10 @@ conversion, sequence counters, or ACK handling.
 
 ## DPT values
 
-`knx-dpt` owns all binary datapoint conversion; the bindings pass JSON-shaped
-values into Rust and return the same shapes back. Offline coverage is partial:
-many datapoint families encode and decode, while several (for example DPT 4,
-parts of the DPT 9 family, DPT 21/22, and DPT 29) are decode-only for now.
+`knx-dpt` owns binary datapoint conversion. The bindings pass JSON-shaped values
+into Rust and return the same shapes back. DPT coverage is partial: many
+datapoint families encode and decode, while several (for example DPT 4, parts of
+the DPT 9 family, DPT 21/22, and DPT 29) are decode-only for now.
 
 ## KNXnet/IP transport
 

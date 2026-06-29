@@ -35,9 +35,9 @@ import asyncio
 from knxyz import connect_tunnel
 
 async def main():
-    client = await connect_tunnel(host="knxip.example")   # your KNXnet/IP interface
+    client = await connect_tunnel(host="knxip.example")
     try:
-        value = await client.read("1/0/0", "9.001")        # read a temperature
+        value = await client.read("1/0/0", "9.001")
         print(value)
     finally:
         await client.close()
@@ -50,9 +50,9 @@ asyncio.run(main())
 ```javascript
 import { connectTunnel } from "@knxyz/knx";
 
-const client = await connectTunnel({ host: "knxip.example" });   // your KNXnet/IP interface
+const client = await connectTunnel({ host: "knxip.example" });
 try {
-  const value = await client.read("1/0/0", "9.001");   // read a temperature
+  const value = await client.read("1/0/0", "9.001");
   console.log(value);
 } finally {
   await client.close();

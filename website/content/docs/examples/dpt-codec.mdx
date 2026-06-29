@@ -1,0 +1,47 @@
+---
+title: DPT codec examples
+description: Datapoint codec examples for Rust, Python, and Node.js.
+---
+
+DPT codec examples show how to encode KNX datapoint values into payload bytes
+and decode payload bytes back into values.
+
+## Python
+
+Example file: [`examples/python/dpt_codec.py`][python-dpt]
+
+```python
+from knxyz import dpt
+
+payload = dpt.encode("9.001", 21.0)
+assert payload.hex() == "0c1a"
+assert dpt.decode("9.001", payload) == 21.0
+```
+
+## Node.js
+
+Example file: [`examples/node/dpt-codec.ts`][node-dpt]
+
+```ts
+import { encodeDpt, decodeDpt } from "@knxyz/knx";
+
+const payload = encodeDpt("9.001", 21.0);
+console.assert(Buffer.from(payload).toString("hex") === "0c1a");
+console.assert(decodeDpt("9.001", payload) === 21.0);
+```
+
+## Rust
+
+Example file: [`examples/rust/dpt_codec.rs`][rust-dpt]
+
+```rust
+use knxyz::{dpt, DptValue};
+
+let payload = dpt::encode("9.001", DptValue::Temperature(21.0))?;
+assert_eq!(payload, vec![0x0c, 0x1a]);
+assert_eq!(dpt::decode("9.001", &payload)?, DptValue::Temperature(21.0));
+```
+
+[python-dpt]: https://github.com/goznauk/KNXyz/blob/main/examples/python/dpt_codec.py
+[node-dpt]: https://github.com/goznauk/KNXyz/blob/main/examples/node/dpt-codec.ts
+[rust-dpt]: https://github.com/goznauk/KNXyz/blob/main/examples/rust/dpt_codec.rs

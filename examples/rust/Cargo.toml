@@ -11,8 +11,8 @@ knxyz = { path = "../../crates/knxyz" }
 tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
 
 [[bin]]
-name = "offline-dpt"
-path = "offline_dpt.rs"
+name = "dpt-codec"
+path = "dpt_codec.rs"
 
 [[bin]]
 name = "group-read"

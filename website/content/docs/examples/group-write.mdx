@@ -1,0 +1,73 @@
+---
+title: Group write examples
+description: Write group values through a KNXnet/IP gateway.
+---
+
+Group write examples write a group value through a KNXnet/IP gateway. The
+runnable examples demonstrate a DPT `1.001` boolean write.
+
+Inputs:
+
+- gateway host
+- group address
+- DPT id
+- value
+
+## Python
+
+Full command-line example: [`examples/python/group_write.py`][python-write]
+
+Core tunnel write call:
+
+```python
+from knxyz import connect_tunnel
+
+client = await connect_tunnel(host="192.168.1.10")
+try:
+    await client.write("1/2/3", True, "1.001")
+finally:
+    await client.close()
+```
+
+## Node.js
+
+Full command-line example: [`examples/node/group-write.ts`][node-write]
+
+Core tunnel write call:
+
+```ts
+import { connectTunnel } from "@knxyz/knx";
+
+const client = await connectTunnel({ host: "192.168.1.10" });
+try {
+  await client.write("1/2/3", true, "1.001");
+} finally {
+  await client.close();
+}
+```
+
+## Rust
+
+Full command-line example: [`examples/rust/group_write.rs`][rust-write]
+
+Core tunnel write call:
+
+```rust
+use knxyz::ip::TunnelClient;
+use knxyz::{DptValue, GroupAddress};
+use std::net::ToSocketAddrs;
+
+let gateway = "192.168.1.10:3671"
+    .to_socket_addrs()?
+    .next()
+    .expect("gateway address");
+let mut client = TunnelClient::connect(gateway).await?;
+let group = "1/2/3".parse::<GroupAddress>()?;
+let result = client.group_write(group, DptValue::Bool(true)).await;
+client.disconnect().await?;
+result?;
+```
+
+[python-write]: https://github.com/goznauk/KNXyz/blob/main/examples/python/group_write.py
+[node-write]: https://github.com/goznauk/KNXyz/blob/main/examples/node/group-write.ts
+[rust-write]: https://github.com/goznauk/KNXyz/blob/main/examples/rust/group_write.rs

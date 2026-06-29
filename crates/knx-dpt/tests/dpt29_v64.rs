@@ -1,11 +1,11 @@
-//! DPT 29.xxx — KNX V64, 8-octet two's-complement signed integer, DECODE-ONLY.
+//! DPT 29.xxx — KNX V64, 8-octet two's-complement signed integer, decode-only.
 //!
 //! 29.010 (active energy Wh), 29.011 (apparent energy VAh), 29.012 (reactive
 //! energy VARh) all share one wire codec (the unit is carried by the DPT id),
 //! decoding the 8 big-endian octets to `DptValue::I64`. Encode is intentionally
-//! NOT provided — main 29 is absent from the uniform table (so
+//! not provided — main 29 is absent from the uniform table (so
 //! `encode("29.xxx", …)` stays `UnsupportedDpt`), and `I64` additionally
-//! loud-fails in `knx-ip`'s `encode_value` (decode-only isolation invariant).
+//! is rejected in `knx-ip`'s `encode_value`.
 //!
 //! These tests pin the decode vectors (incl. negatives, i64::MIN/MAX, and a
 //! value beyond the JS 2^53 safe-integer range), the length contract, the
@@ -44,7 +44,7 @@ fn dpt29_decodes_8_octet_twos_complement_big_endian() {
 #[test]
 fn dpt29_decodes_distinct_byte_order_and_large_values() {
     // fully distinct ascending bytes catch a byte-order bug; this value
-    // (~7.26e16) is ALSO beyond 2^53, exercising the large-magnitude path.
+    // (~7.26e16) is also beyond 2^53, exercising the large-magnitude path.
     assert_eq!(
         i64_of("29.010", &[0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08]),
         72_623_859_790_382_856,
@@ -78,7 +78,7 @@ fn dpt29_wrong_length_loud_fails() {
 
 #[test]
 fn dpt29_is_decode_only_encode_unsupported() {
-    // decode-only: encode loud-fails (main 29 is not in the uniform table and
+    // decode-only: encode returns an error (main 29 is not in the uniform table and
     // has no encode arm). The I64 variant is also refused by knx-ip encode_value
     // (covered by a knx-ip test), so a decoded value is never silently written.
     for dpt in ["29.010", "29.011", "29.012"] {
@@ -92,7 +92,7 @@ fn dpt29_is_decode_only_encode_unsupported() {
 
 #[test]
 fn dpt29_unsupported_neighbour_mains_stay_unsupported() {
-    // mains 28 (UTF-8 string) and 30 stay unsupported in BOTH directions; only
+    // mains 28 (UTF-8 string) and 30 stay unsupported in both directions; only
     // main 29 was added.
     for dpt in ["28.001", "30.001"] {
         assert_eq!(

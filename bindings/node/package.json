@@ -1,6 +1,6 @@
 {
   "name": "@knxyz/knx",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "KNX datapoint codecs and KNXnet/IP client bindings for Node.js.",
   "license": "MIT",
   "author": {
@@ -19,24 +19,30 @@
   },
   "type": "module",
   "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "types": "./index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
+      "types": "./index.d.ts",
       "import": "./src/index.ts",
       "default": "./src/index.ts"
     }
   },
   "files": [
     "src/index.ts",
+    "index.d.ts",
     "index.*.node",
     "knxyz-node.*.node"
   ],
   "scripts": {
     "build:native": "node scripts/build-native.mjs",
-    "test": "npm run build:native && node --experimental-strip-types --test test/*.test.ts"
+    "test": "npm run build:native && npm run test:types && node --experimental-strip-types --test test/*.test.ts",
+    "test:types": "npm run test:types:ts6 && npm run test:types:ts5",
+    "test:types:ts6": "node ./node_modules/typescript/bin/tsc -p tsconfig.types-smoke.json",
+    "test:types:ts5": "node ./node_modules/typescript5/bin/tsc -p tsconfig.types-smoke.json"
   },
   "devDependencies": {
-    "@napi-rs/cli": "^3.7.2"
+    "@napi-rs/cli": "^3.7.2",
+    "typescript": "6.0.3",
+    "typescript5": "npm:typescript@5.9.3"
   }
 }

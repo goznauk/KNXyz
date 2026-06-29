@@ -1,9 +1,8 @@
-// KNXyz example: offline DPT encode/decode (default-safe, print-only).
+// KNXyz example: DPT codec.
 //
-// This example does not connect to a KNX bus. It encodes and decodes KNX
-// datapoint values from local bytes only, so it needs no network and no KNX
-// hardware. The Node binding is a native addon: build it once before running
-// this example (see examples/README.md).
+// This example encodes KNX datapoint values into payload bytes and decodes them
+// back. The Node binding is a native addon: build it once before running this
+// example (see examples/README.md).
 
 import { encodeDpt, decodeDpt } from "@knxyz/knx";
 
@@ -11,7 +10,7 @@ function hex(payload: Uint8Array): string {
   return Array.from(payload, (b) => b.toString(16).padStart(2, "0")).join(" ");
 }
 
-// Scalar DPTs decode to a bare value; some (e.g. 17.001 in Node) decode to a
+// Scalar DPTs decode to a plain value; some (for example 17.001 in Node) decode to a
 // tagged object { type, value }. Pull the scalar out for the round-trip check.
 function scalarOf(decoded: unknown): unknown {
   if (decoded !== null && typeof decoded === "object" && "value" in (decoded as object)) {
@@ -40,7 +39,7 @@ for (const [dpt, label, value] of cases) {
   );
 }
 
-console.log(`offline round-trip: ${ok ? "all OK" : "FAILED"}`);
+console.log(`DPT codec round-trip: ${ok ? "all OK" : "FAILED"}`);
 if (!ok) {
   process.exit(1);
 }

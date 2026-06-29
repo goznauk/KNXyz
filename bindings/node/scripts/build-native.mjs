@@ -1,10 +1,15 @@
-import { existsSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { delimiter, join } from "node:path";
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 
 const cargoDir = findCargoDir();
 const env = { ...process.env };
+const declarationPath = fileURLToPath(new URL("../index.d.ts", import.meta.url));
+const declarationBackup = existsSync(declarationPath)
+  ? readFileSync(declarationPath)
+  : undefined;
 
 if (cargoDir) {
   env.PATH = [cargoDir, env.PATH].filter(Boolean).join(delimiter);
@@ -16,7 +21,14 @@ const result = spawnSync("napi", ["build", "--platform", "--release"], {
   stdio: "inherit",
 });
 
-process.exit(result.status ?? 1);
+const status = result.status ?? 1;
+if (status === 0 && declarationBackup?.length) {
+  if (!existsSync(declarationPath) || statSync(declarationPath).size === 0) {
+    writeFileSync(declarationPath, declarationBackup);
+  }
+}
+
+process.exit(status);
 
 function findCargoDir() {
   if (spawnSync("cargo", ["--version"], { stdio: "ignore" }).status === 0) {

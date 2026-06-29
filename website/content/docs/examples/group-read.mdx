@@ -1,0 +1,73 @@
+---
+title: Group read examples
+description: Read group values through a KNXnet/IP gateway.
+---
+
+Group read examples read a group value through a KNXnet/IP gateway.
+
+Inputs:
+
+- gateway host
+- group address
+- DPT id
+
+## Python
+
+Full command-line example: [`examples/python/group_read.py`][python-read]
+
+Core tunnel read call:
+
+```python
+from knxyz import connect_tunnel
+
+client = await connect_tunnel(host="192.0.2.10")
+try:
+    value = await client.read("1/0/0", "9.001")
+finally:
+    await client.close()
+```
+
+## Node.js
+
+Full command-line example: [`examples/node/group-read.ts`][node-read]
+
+Core tunnel read call:
+
+```ts
+import { connectTunnel } from "@knxyz/knx";
+
+const client = await connectTunnel({ host: "192.0.2.10" });
+try {
+  const value = await client.read("1/0/0", "9.001");
+} finally {
+  await client.close();
+}
+```
+
+## Rust
+
+Full command-line example: [`examples/rust/group_read.rs`][rust-read]
+
+Core tunnel read call:
+
+```rust
+use knxyz::ip::TunnelClient;
+use knxyz::GroupAddress;
+use std::net::ToSocketAddrs;
+use std::time::Duration;
+
+let gateway = "192.0.2.10:3671"
+    .to_socket_addrs()?
+    .next()
+    .expect("gateway address");
+let mut client = TunnelClient::connect(gateway).await?;
+let group = "1/0/0".parse::<GroupAddress>()?;
+let value = client
+    .group_read(group, "9.001", Duration::from_secs(3))
+    .await?;
+client.disconnect().await?;
+```
+
+[python-read]: https://github.com/goznauk/KNXyz/blob/main/examples/python/group_read.py
+[node-read]: https://github.com/goznauk/KNXyz/blob/main/examples/node/group-read.ts
+[rust-read]: https://github.com/goznauk/KNXyz/blob/main/examples/rust/group_read.rs

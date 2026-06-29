@@ -20,12 +20,20 @@
 //! # Ok::<(), knxyz::dpt::DptError>(())
 //! ```
 
-#![forbid(unsafe_code)]
+// The raw C ABI uses exported symbol attributes. Keep unsafe operations denied
+// while avoiding a crate-level unsafe-code ban that rejects those attributes.
+#![deny(unsafe_op_in_unsafe_fn)]
+
+/// Small raw C ABI for KNX datapoint codec calls.
+///
+/// ABI v1 exposes DPT `9.001` temperature encode/decode with C-compatible
+/// result structs.
+pub mod capi;
 
 /// KNX data point type (DPT) encoding and decoding.
 ///
 /// Re-exported from the `knx-dpt` crate: [`encode`](knx_dpt::encode) /
-/// [`decode`](knx_dpt::decode) are pure, offline byte transforms.
+/// [`decode`](knx_dpt::decode) are pure payload byte transforms.
 pub mod dpt {
     pub use knx_dpt::{decode, encode, DptError, DptValue, Result};
 }
@@ -35,9 +43,10 @@ pub use knx_dpt::DptValue;
 
 /// KNXnet/IP client building blocks.
 ///
-/// Re-exported from the `knx-ip` crate: connect a [`TunnelClient`](knx_ip::TunnelClient)
-/// to a KNXnet/IP interface to read group values, or [`discover_gateways`](knx_ip::discover_gateways)
-/// to find interfaces on the local network.
+/// Re-exported from the `knx-ip` crate: connect a
+/// [`TunnelClient`](knx_ip::TunnelClient) to a KNXnet/IP interface to read
+/// group values, or use [`discover_gateways`](knx_ip::discover_gateways) to find
+/// interfaces on the local network.
 ///
 /// ```no_run
 /// # async fn read_one() -> Result<(), Box<dyn std::error::Error>> {
@@ -58,8 +67,9 @@ pub use knx_dpt::DptValue;
 /// ```
 pub mod ip {
     pub use knx_ip::{
-        discover_gateways, DiscoveryOptions, Gateway, KnxIpError, Result, TunnelClient,
-        TunnelOptions, KNXNET_IP_PORT,
+        discover_gateways, DiscoveryOptions, Gateway, KnxIpError, Result, RouteEvent, RouteMonitor,
+        RouteSender, RoutingOptions, RoutingSendOptions, TunnelClient, TunnelOptions,
+        DEFAULT_ROUTING_MULTICAST, DEFAULT_ROUTING_PORT, KNXNET_IP_PORT,
     };
 }
 

@@ -28,13 +28,13 @@ export interface TunnelClient {
   write(groupAddress: string, value: unknown, dpt: string): Promise<void>;
   read(groupAddress: string, dpt: string, timeoutMs?: number): Promise<unknown>;
   /**
-   * Best-effort orderly disconnect; idempotent. Sends a KNXnet/IP
-   * DISCONNECT_REQUEST and releases the connection. It sends no group write and
-   * never reconnects, and it tolerates a silent gateway (it does not throw on
-   * teardown).
+   * Closes the tunnel and releases local resources. Idempotent.
+   *
+   * When connected, this sends a KNXnet/IP DISCONNECT_REQUEST. Teardown is
+   * best-effort, so a silent gateway response does not make close() fail.
    */
   close(): Promise<void>;
-  /** Alias for {@link TunnelClient.close}. */
+  /** Alias for {@link close}. */
   disconnect(): Promise<void>;
 }
 

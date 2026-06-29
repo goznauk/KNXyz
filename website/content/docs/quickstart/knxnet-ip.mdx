@@ -1,0 +1,150 @@
+---
+title: KNXnet/IP quickstart
+description: Discover gateways, connect through a tunnel, and read or write group values.
+---
+
+KNXyz includes KNXnet/IP helpers for gateway discovery, tunnel connections,
+group reads, and group writes.
+
+## Discover gateways
+
+### Python
+
+```python
+import asyncio
+from knxyz import discover_gateways
+
+async def main():
+    gateways = await discover_gateways(timeout_ms=1500)
+    for gateway in gateways:
+        print(gateway["controlEndpoint"])
+
+asyncio.run(main())
+```
+
+### Node.js
+
+```ts
+import { discoverGateways } from "@knxyz/knx";
+
+const gateways = await discoverGateways({ timeoutMs: 1500 });
+for (const gateway of gateways) {
+  console.log(gateway.controlEndpoint);
+}
+```
+
+### Rust
+
+```rust
+use knxyz::ip::{discover_gateways, DiscoveryOptions};
+
+let gateways = discover_gateways(DiscoveryOptions::default()).await?;
+for gateway in gateways {
+    println!("{}", gateway.control_endpoint);
+}
+```
+
+## Connect through a tunnel
+
+### Python
+
+```python
+import asyncio
+from knxyz import connect_tunnel
+
+async def main():
+    client = await connect_tunnel(host="192.0.2.10")
+    try:
+        print("connected")
+    finally:
+        await client.close()
+
+asyncio.run(main())
+```
+
+### Node.js
+
+```ts
+import { connectTunnel } from "@knxyz/knx";
+
+const client = await connectTunnel({ host: "192.0.2.10" });
+try {
+  console.log("connected");
+} finally {
+  await client.close();
+}
+```
+
+### Rust
+
+```rust
+use knxyz::ip::TunnelClient;
+use std::net::ToSocketAddrs;
+
+let gateway = "192.0.2.10:3671"
+    .to_socket_addrs()?
+    .next()
+    .expect("gateway address");
+let mut client = TunnelClient::connect(gateway).await?;
+client.disconnect().await?;
+```
+
+## Read a group value
+
+A group read uses a group address and a datapoint type.
+
+### Python
+
+```python
+value = await client.read("1/0/0", "9.001")
+print(value)
+```
+
+### Node.js
+
+```ts
+const value = await client.read("1/0/0", "9.001");
+console.log(value);
+```
+
+### Rust
+
+```rust
+use knxyz::GroupAddress;
+use std::time::Duration;
+
+let group = "1/0/0".parse::<GroupAddress>()?;
+let value = client
+    .group_read(group, "9.001", Duration::from_secs(3))
+    .await?;
+println!("{value:?}");
+```
+
+## Write a group value
+
+Python and Node.js use `write(group_address, value, dpt)`. Rust uses `group_write(group_address, DptValue)`.
+
+### Python
+
+```python
+await client.write("1/2/3", True, "1.001")
+```
+
+### Node.js
+
+```ts
+await client.write("1/2/3", true, "1.001");
+```
+
+### Rust
+
+```rust
+use knxyz::{DptValue, GroupAddress};
+
+let group = "1/2/3".parse::<GroupAddress>()?;
+client
+    .group_write(group, DptValue::Bool(true))
+    .await?;
+```
+
+See the [examples](/docs/examples) for complete Rust, Python, and Node.js files.

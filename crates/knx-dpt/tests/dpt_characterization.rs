@@ -1,7 +1,7 @@
 //! Characterization + regression tests for `knx-dpt` boundary / edge / error
 //! behavior of DPT9 (2-byte float), DPT10 (time) and DPT11 (date).
 //!
-//! These tests assert the ACTUAL current behavior of the crate. They do not
+//! These tests assert the current behavior of the crate. They do not
 //! change any production logic. Existing happy-path coverage (9.001 21.0 /
 //! -5.5 / 0.0, the shared fixture dates/times, generic length rejects) lives
 //! in `dpt_mvp.rs` / `dpt_core_fixtures.rs` / `dpt_properties.rs` and is NOT
@@ -42,7 +42,7 @@ fn dpt9_encode_negative_zero_is_canonical_zero_twos_complement() {
     };
     assert_eq!(d, 0.0);
     // [0x80, 0x00] is now the most-negative mantissa at exp 0 (-2048 -> -20.48),
-    // NOT a "negative zero" bit pattern.
+    // not a "negative zero" bit pattern.
     let DptValue::Temperature(neg) = decode("9.001", &[0x80, 0x00]).unwrap() else {
         panic!("expected Temperature");
     };

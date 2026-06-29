@@ -125,15 +125,11 @@ impl NativeTunnelClient {
         dpt_value_to_json(value)
     }
 
-    /// Best-effort orderly tunnel shutdown.
+    /// Closes the tunnel and releases local resources.
     ///
-    /// Sends a real KNXnet/IP DISCONNECT_REQUEST through the underlying client
-    /// and releases the connection. It is IDEMPOTENT (a second call is a no-op),
-    /// it sends NO group write, and it never reconnects. The underlying
-    /// `disconnect()` is itself ack-timeout-bounded, so it cannot hang on a
-    /// silent/unreachable gateway; close then intentionally DISCARDS that result
-    /// (best-effort), so it never throws on teardown. The TS layer also exposes
-    /// this as `disconnect()`.
+    /// When connected, this sends a KNXnet/IP DISCONNECT_REQUEST through the
+    /// underlying client. Teardown is best-effort: a silent gateway response does
+    /// not make close fail. The TS layer also exposes this as `disconnect()`.
     #[napi]
     pub async fn close(&self) -> NapiResult<()> {
         if self.closed.swap(true, Ordering::SeqCst) {
@@ -231,14 +227,10 @@ fn dpt_value_from_json(dpt: &str, value: &Value) -> NapiResult<DptValue> {
         return json_f32(value).map(DptValue::Temperature);
     }
     if dpt == "17.001" {
-        // Untyped scene-number shorthand — parity with the Python binding
-        // (bindings/python/src/lib.rs), so a BARE number under "17.001" is
-        // accepted identically. `json_u8` enforces 0..=255; the unchanged
-        // native dpt17 codec enforces the 0..=63 scene bound on encode. (The
-        // tagged `{type:"scene_number",value}` form is already accepted above
-        // via `dpt_value_from_typed_json`; this only adds the bare spelling and
-        // opens no new capability — SceneNumber already maps to "17.001" in the
-        // write path.)
+        // Untyped scene-number shorthand, kept in parity with the Python binding
+        // (bindings/python/src/lib.rs). `json_u8` enforces 0..=255, and the
+        // native DPT17 codec enforces the 0..=63 scene bound on encode. The
+        // tagged `{type:"scene_number",value}` form is already accepted above.
         return json_u8(value).map(DptValue::SceneNumber);
     }
 
@@ -314,14 +306,14 @@ fn dpt_value_from_typed_json(value: &Value) -> NapiResult<Option<DptValue>> {
         }
         "energy_i32" => DptValue::EnergyI32(json_i32(json_field(value, "value")?)?),
         "energy_u32" => DptValue::EnergyU32(json_u32(json_field(value, "value")?)?),
-        // i64 (DPT29 V64) crosses JSON as a DECIMAL STRING to survive JS number
-        // precision; parse the string, never as_i64 on a (rounded) number.
+        // i64 (DPT29 V64) crosses JSON as a decimal string to preserve values
+        // outside JavaScript's safe integer range.
         "i64" => DptValue::I64(json_i64_str(json_field(value, "value")?)?),
         // char (DPT4) crosses JSON as a 1-char string.
         "char" => DptValue::Char(json_char(json_field(value, "value")?)?),
-        // DPT21/22 raw bitsets cross JSON as a bare u8/u16 number. from-json is
-        // for round-trip/marshal only — encode still refuses (mains 21/22 absent
-        // from the codec table; Bitset* loud-fails encode_value).
+        // DPT21/22 raw bitsets cross JSON as plain u8/u16 numbers. from-json is
+        // for round-trip/marshal only: encode still refuses because mains 21/22
+        // are absent from the codec table and Bitset* is rejected by encode_value.
         "bitset8" => DptValue::Bitset8(json_u8(json_field(value, "value")?)?),
         "bitset16" => DptValue::Bitset16(json_u16(json_field(value, "value")?)?),
         _ => {
@@ -338,7 +330,7 @@ fn dpt_value_to_json(value: DptValue) -> NapiResult<String> {
     let value = match value {
         DptValue::Bool(value) => serde_json::json!(value),
         DptValue::U8(value) => serde_json::json!(value),
-        // Float16 (weather 9.004/5/6/7) and Angle (5.003) decode to a bare
+        // Float16 (weather 9.004/5/6/7) and Angle (5.003) decode to a plain
         // JSON number like Temperature/Scaling (no unit tag; decode-only).
         DptValue::Scaling(value)
         | DptValue::Temperature(value)
@@ -409,9 +401,8 @@ fn dpt_value_to_json(value: DptValue) -> NapiResult<String> {
         DptValue::EnergyU32(value) => {
             serde_json::json!({ "type": "energy_u32", "value": value })
         }
-        // i64 (DPT29 V64) is emitted as a DECIMAL STRING: its range exceeds the
-        // JS safe-integer range (2^53), so a bare JSON number would be silently
-        // corrupted when the JS side JSON.parses the decoded payload.
+        // i64 (DPT29 V64) is emitted as a decimal string so values outside
+        // JavaScript's safe integer range are preserved exactly.
         DptValue::I64(value) => {
             serde_json::json!({ "type": "i64", "value": value.to_string() })
         }
@@ -419,7 +410,7 @@ fn dpt_value_to_json(value: DptValue) -> NapiResult<String> {
         DptValue::Char(value) => {
             serde_json::json!({ "type": "char", "value": value.to_string() })
         }
-        // DPT21/22 raw bitsets cross JSON as a bare number (u8/u16 fit the JS
+        // DPT21/22 raw bitsets cross JSON as plain numbers (u8/u16 fit the JS
         // safe-integer range, unlike i64 above which needs a decimal string).
         DptValue::Bitset8(value) => {
             serde_json::json!({ "type": "bitset8", "value": value })
@@ -497,9 +488,8 @@ fn json_i32(value: &Value) -> NapiResult<i32> {
     i32::try_from(value).map_err(|_| napi::Error::from_reason("DPT value is out of i32 range"))
 }
 
-// i64 (DPT29 V64) crosses JSON as a DECIMAL STRING (not a number): a bare i64
-// number would already have lost precision passing through JS, so the contract
-// is a string parsed here, never as_i64.
+// i64 (DPT29 V64) crosses JSON as a decimal string so values outside
+// JavaScript's safe integer range are preserved exactly.
 fn json_i64_str(value: &Value) -> NapiResult<i64> {
     value
         .as_str()
@@ -508,7 +498,7 @@ fn json_i64_str(value: &Value) -> NapiResult<i64> {
         .map_err(|_| napi::Error::from_reason("DPT value is out of i64 range"))
 }
 
-// char (DPT4) crosses JSON as a string of EXACTLY one character.
+// char (DPT4) crosses JSON as a string of exactly one character.
 fn json_char(value: &Value) -> NapiResult<char> {
     let text = value
         .as_str()

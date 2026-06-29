@@ -1,14 +1,9 @@
-"""KNXyz example - group READ (DEFAULT-SAFE: dry-run).
+"""KNXyz example: group read.
 
-SAFETY: a ``GroupValueRead`` is an ACTIVE bus telegram (it solicits the bus), so
-by default this performs NO bus I/O. It prints the read it WOULD perform and
-exits WITHOUT opening a socket (it does not even import the client on the default
-path). A real live read is advanced-only and ISOLATED-BUS-ONLY: it requires
-``--live``, ``KNXYZ_EXAMPLE_ALLOW_LIVE=1``, and explicit
-``--gateway-host``/``--group-address``/``--dpt``; it refuses
-documentation/placeholder hosts and refuses to run under CI. The live path is
-read-only and closes the tunnel in a ``finally`` block. NEVER point this at a
-production or shared KNX bus. See examples/README.md.
+The default run is a dry run. Live mode requires ``--live``,
+``KNXYZ_EXAMPLE_ALLOW_LIVE=1``, and explicit gateway, group address, and DPT
+arguments. Placeholder hosts are rejected, and the live tunnel is closed in a
+``finally`` block. See examples/README.md.
 """
 
 import argparse
@@ -16,12 +11,17 @@ import asyncio
 import os
 import sys
 
-# RFC 5737 TEST-NET / RFC 3849 documentation ranges + symbolic tokens; refused live
+# RFC 5737 TEST-NET / RFC 3849 documentation ranges and placeholder tokens.
 _PLACEHOLDER_PREFIXES = ("192.0.2.", "198.51.100.", "203.0.113.", "2001:db8")
 
 
 def _is_placeholder(host: str) -> bool:
-    return host.startswith(_PLACEHOLDER_PREFIXES) or "example" in host or host.startswith("<")
+    normalized = host[1:] if host.startswith("[") else host
+    return (
+        normalized.startswith(_PLACEHOLDER_PREFIXES)
+        or "example" in normalized
+        or normalized.startswith("<")
+    )
 
 
 def _is_ci() -> bool:
@@ -30,12 +30,11 @@ def _is_ci() -> bool:
 
 async def main() -> None:
     parser = argparse.ArgumentParser(
-        description="KNXyz group-read example (dry-run by default; live = isolated bus only)"
+        description="KNXyz group-read example (dry-run by default; use --live to connect)"
     )
     parser.add_argument("--live", action="store_true")
-    # live-required params default to None so the live path can require them
-    # EXPLICITLY (no silent default GA/DPT); dry-run falls back to a documentation
-    # placeholder host (RFC 5737 TEST-NET, refused in live mode).
+    # Live-required params default to None so live mode can require explicit
+    # gateway, group address, and DPT arguments.
     parser.add_argument("--gateway-host", default=None)
     parser.add_argument("--port", type=int, default=3671)
     parser.add_argument("--group-address", default=None)
@@ -56,33 +55,33 @@ async def main() -> None:
         print(
             f"DRY-RUN: would read GA={group_address} DPT={dpt} "
             f"from {host}:{args.port} (no connection made).\n"
-            "For a REAL read on an ISOLATED test bus ONLY, pass --live "
+            "For a live read, pass --live "
             "--gateway-host <host> --group-address <ga> --dpt 9.001 and set "
-            "KNXYZ_EXAMPLE_ALLOW_LIVE=1. NEVER target a production/shared bus."
+            "KNXYZ_EXAMPLE_ALLOW_LIVE=1."
         )
         return
 
-    # live path: advanced, isolated-bus-only, fail-closed
+    # Live path: require explicit arguments, environment variable, and non-placeholder host.
     if _is_ci():
         sys.exit("refusing a live read under CI")
     if _is_placeholder(args.gateway_host):
         sys.exit(
             "refusing a live read against a documentation/placeholder host; "
-            "pass --gateway-host for your own isolated test gateway"
+            "pass --gateway-host for your gateway"
         )
 
     from knxyz import connect_tunnel  # imported only on the armed live path
 
     print(
         f"LIVE: reading GA={args.group_address} as DPT={args.dpt} from "
-        f"{args.gateway_host} (ISOLATED test bus)..."
+        f"{args.gateway_host}..."
     )
     client = await connect_tunnel(host=args.gateway_host, port=args.port)
     try:
         value = await client.read(args.group_address, args.dpt)
         print(value)
     finally:
-        await client.close()  # deterministic teardown
+        await client.close()  # close the tunnel regardless of the read result
 
 
 if __name__ == "__main__":

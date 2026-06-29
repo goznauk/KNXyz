@@ -17,7 +17,7 @@
 //! `9.025` volume flow l/h, `9.026` rain amount l/m², `9.027` temperature °F,
 //! `9.028` wind speed km/h, `9.029` absolute humidity g/m³,
 //! `9.030` concentration µg/m³) — i.e. every defined `9.xxx` other than
-//! `9.001` — share the identical wire codec but are DECODE-ONLY via
+//! `9.001` — share the identical wire codec but decode via
 //! [`decode_weather`] and use the unit-agnostic [`DptValue::Float16`] variant,
 //! so they are never misrepresented as temperature.
 
@@ -48,7 +48,7 @@ pub fn encode(value: DptValue) -> Result<std::vec::Vec<u8>> {
 
     for exponent in 0..=MAX_EXPONENT {
         let scale = (1u32 << exponent) as f32 * RESOLUTION;
-        // signed two's-complement mantissa: keep the sign here (NOT abs) so the
+        // signed two's-complement mantissa: keep the sign here, not abs, so the
         // sign bit is driven by the mantissa, which also makes -0.0 encode to
         // [0x00, 0x00] (mantissa 0, sign clear) rather than a spurious -2048.
         let mantissa = (value / scale).round() as i32;

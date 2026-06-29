@@ -27,7 +27,7 @@ pub fn be_array<const N: usize>(bytes: &[u8]) -> Result<[u8; N]> {
 #[cfg(test)]
 mod tests {
     //! Characterization unit tests for the crate-internal `expect_len` helper.
-    //! These assert the ACTUAL current behavior; no production logic is changed.
+    //! These assert current behavior; no production logic is changed.
     use super::{be_array, expect_len};
     use crate::error::DptError;
 

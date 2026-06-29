@@ -1,4 +1,4 @@
-//! DPT 4.xxx — KNX single character, DECODE-ONLY.
+//! DPT 4.xxx — KNX single character.
 //!
 //! `4.001` is ASCII (a 7-bit code point, 0x00..=0x7F); `4.002` is ISO-8859-1
 //! (Latin-1, the full octet 0x00..=0xFF). Both are a single octet decoded to
@@ -9,18 +9,18 @@
 //!
 //! No encode is provided — DPT main 4 is intentionally absent from the uniform
 //! codec table (so `encode("4.xxx", …)` stays [`DptError::UnsupportedDpt`]), and
-//! [`DptValue::Char`] returns an explicit error in `knx-ip`'s `encode_value` write-path
-//! inference, so a decoded character can never be silently written to a wrong
-//! main (a U8 reuse could not provide that isolation).
+//! [`DptValue::Char`] returns an explicit error in `knx-ip`'s `encode_value`
+//! write-path inference, so a decoded character can never be silently written to
+//! a wrong main (a U8 reuse could not provide that isolation).
 //!
 //! [`DptError::UnsupportedDpt`]: crate::DptError::UnsupportedDpt
 
 use crate::{common, DptError, DptValue, Result};
 
 /// Decode a 1-octet DPT 4.001 ASCII character. Bytes above `0x7F` are not valid
-/// 7-bit ASCII and loud-fail with [`DptError::InvalidValue`] (the length is
-/// fine, so it is NOT `InvalidLength`; the DPT is supported, so NOT
-/// `UnsupportedDpt`).
+/// 7-bit ASCII and return [`DptError::InvalidValue`]. The length is valid, and
+/// the DPT is supported, so the error is neither `InvalidLength` nor
+/// `UnsupportedDpt`.
 pub fn decode_ascii(bytes: &[u8]) -> Result<DptValue> {
     let [byte] = common::be_array::<1>(bytes)?;
     if byte > 0x7F {

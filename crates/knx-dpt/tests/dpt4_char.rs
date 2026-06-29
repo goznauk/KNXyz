@@ -1,4 +1,4 @@
-//! DPT 4.xxx — KNX single character, DECODE-ONLY.
+//! DPT 4.xxx — KNX single character, decode-only.
 //!
 //! 4.001 (ASCII, 7-bit) and 4.002 (ISO-8859-1 / Latin-1) decode their single
 //! octet to `DptValue::Char` (the character set is carried by the DPT id).
@@ -26,9 +26,9 @@ fn dpt4_001_ascii_decodes_in_range() {
 
 #[test]
 fn dpt4_001_ascii_rejects_high_bit() {
-    // bytes above 0x7F are not valid 7-bit ASCII -> InvalidValue (the
-    // length is correct, so NOT InvalidLength; the DPT is supported, so NOT
-    // UnsupportedDpt). This is the honesty gap a U8 reuse could not close.
+    // Bytes above 0x7F are not valid 7-bit ASCII -> InvalidValue. The length is
+    // correct and the DPT is supported, so this is not InvalidLength or
+    // UnsupportedDpt. This is why DPT4 uses Char instead of U8.
     for byte in [0x80u8, 0xA0, 0xFF] {
         assert!(
             matches!(
@@ -45,8 +45,9 @@ fn dpt4_002_latin1_decodes_every_byte() {
     assert_eq!(char_of("4.002", &[0x41]), 'A');
     assert_eq!(char_of("4.002", &[0xE4]), 'ä'); // U+00E4
     assert_eq!(char_of("4.002", &[0xFF]), 'ÿ'); // U+00FF, max Latin-1
-                                                // the discriminating sub-aware byte: 0x80 is REJECTED by 4.001 but ACCEPTED
-                                                // by 4.002 (a valid Latin-1 C1 control, U+0080).
+
+    // 0x80 is rejected by 4.001 but accepted by 4.002
+    // (a valid Latin-1 C1 control, U+0080).
     assert_eq!(char_of("4.002", &[0x80]), '\u{0080}');
 }
 

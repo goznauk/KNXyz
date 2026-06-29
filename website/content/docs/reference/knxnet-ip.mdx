@@ -1,0 +1,27 @@
+---
+title: KNXnet/IP
+description: KNXnet/IP discovery, tunnel connections, group reads, and group writes.
+---
+
+KNXyz includes KNXnet/IP client building blocks for gateway discovery, tunnel
+connections, group reads, group writes, and routing.
+
+Tunnel connections use an explicit gateway host. Discovery searches for
+KNXnet/IP gateways on the local network.
+
+Group operations combine:
+
+- a group address, such as `1/0/0`
+- a DPT id, such as `9.001`
+- a value for writes
+
+## API names
+
+- Rust: `knxyz::ip::discover_gateways`, `TunnelClient::connect`, `group_read`,
+  `group_write`, `RouteSender`, `RouteMonitor`
+- Python: `discover_gateways`, `connect_tunnel`, `client.read`,
+  `client.write`, `connect_routing`, `RouteClient`
+- Node.js: `discoverGateways`, `connectTunnel`, `client.read`, `client.write`
+
+Python and Node.js write calls use `write(group_address, value, dpt)`. Rust
+writes use `group_write(group_address, DptValue::...)`.

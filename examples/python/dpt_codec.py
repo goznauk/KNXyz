@@ -1,9 +1,8 @@
-"""Offline DPT encode/decode example (default-safe, print-only).
+"""KNXyz example: DPT codec.
 
-This example does not connect to a KNX bus. It encodes and decodes KNX datapoint
-values from local bytes only, so it needs no network and no KNX hardware. Run it
-from a source checkout with the locally-built package:
-  python examples/python/offline_dpt.py
+This example encodes KNX datapoint values into payload bytes and decodes them
+back. Run it from a source checkout with the locally-built package:
+  python examples/python/dpt_codec.py
 """
 
 import sys
@@ -16,7 +15,7 @@ def _hex(payload: bytes) -> str:
 
 
 def main() -> int:
-    # Scalar DPTs round-trip to a bare Python value (bool / int / float).
+    # Scalar DPTs round-trip to a plain Python value (bool / int / float).
     cases = [
         ("1.001", "switch (boolean)", True),
         ("9.001", "temperature (degC, Float16)", 21.0),
@@ -34,7 +33,7 @@ def main() -> int:
             "DPT %-7s %-28s value=%-6r -> bytes=[%s] -> decoded=%r %s"
             % (dpt_id, label, value, _hex(payload), decoded, "OK" if matched else "MISMATCH")
         )
-    print("offline round-trip:", "all OK" if ok else "FAILED")
+    print("DPT codec round-trip:", "all OK" if ok else "FAILED")
     return 0 if ok else 1
 
 

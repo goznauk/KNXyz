@@ -3,7 +3,7 @@
 //! 0..=360 ° value onto a single 0..=255 byte (`degrees = byte * 360 / 255`).
 //! Both mappings are **lossy**: `encode` then `decode` does not generally
 //! return the exact input (the fixture tests use a tolerance). `5.003` is
-//! DECODE-ONLY here (wind bearing is a listener-only weather reading). Other
+//! decode-only here (wind bearing is a listener-only weather reading). Other
 //! 5.xxx sub-types pass the raw byte through unchanged.
 
 use crate::{common, DptError, DptValue, Result};

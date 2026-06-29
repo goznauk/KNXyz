@@ -1,0 +1,57 @@
+---
+title: Cython
+description: Cython cimport support for KNXyz.
+---
+
+Cython users can cimport `knxyz.capi` and call the Python wheel's PyCapsule
+function table.
+
+This path is useful when a Cython extension already runs inside Python and uses
+the installed `knxyz` wheel.
+
+The Cython API covers DPT `9.001` temperature encode/decode.
+
+## Minimal flow
+
+```py
+from knxyz import _knxyz as _native
+from knxyz.capi cimport (
+    KNXYZ_STATUS_OK,
+    knxyz_capi_v1,
+    knxyz_dpt9_001_encode_result_t,
+    knxyz_import_capi,
+)
+
+cdef knxyz_capi_v1* api = knxyz_import_capi(_native._C_API)
+cdef knxyz_dpt9_001_encode_result_t result = api.dpt9_001_encode_f32(21.0)
+assert result.status == KNXYZ_STATUS_OK
+assert result.payload.bytes[0] == 0x0c
+assert result.payload.bytes[1] == 0x1a
+```
+
+The Python package ships the Cython declarations and header at:
+
+- `knxyz/capi.pxd`
+- `knxyz/include/knxyz/capi.h`
+
+Use `knxyz.get_include()` from `setup.py` or another build helper to add the
+installed header directory:
+
+```py
+from setuptools import Extension
+import knxyz
+
+Extension(
+    "knxyz_cython_smoke",
+    ["knxyz_cython_smoke.pyx"],
+    include_dirs=[knxyz.get_include()],
+)
+```
+
+## Relationship to the C ABI
+
+The Cython wheel path uses the Python extension module's PyCapsule function
+table. C and C++ consumers use the separate raw C ABI from the Rust `knxyz`
+facade crate.
+
+See [C ABI](/docs/reference/c-abi) for the linked C/C++ path.

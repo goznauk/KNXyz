@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 #![allow(clippy::useless_conversion)]
 
+use std::ffi::CString;
 use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
 use std::pin::Pin;
 use std::str::FromStr;
@@ -14,9 +15,10 @@ use knx_ip::{
     ConnectionEvent, DiscoveryOptions, GroupEvent, RouteEvent, RouteMonitor, RouteSender,
     RoutingOptions, RoutingSendOptions, TunnelClient, TunnelOptions,
 };
+use knxyz::capi;
 use pyo3::exceptions::{PyRuntimeError, PyValueError};
 use pyo3::prelude::*;
-use pyo3::types::PyBytes;
+use pyo3::types::{PyBytes, PyCapsule};
 use serde::Serialize;
 use serde_json::Value;
 use tokio::runtime::Runtime;
@@ -266,20 +268,11 @@ impl NativeTunnelClient {
         dpt_value_to_json(value)
     }
 
-    /// Release the native tunnel client deterministically.
+    /// Best-effort orderly shutdown.
     ///
-    /// When a client is connected, this first sends a KNXnet/IP
-    /// DISCONNECT_REQUEST so the gateway frees the tunnel slot
-    /// immediately rather than waiting for its connection-state timeout.
-    /// The disconnect is BEST-EFFORT and timeout-bounded: it is a real
-    /// frame on the wire and waits only up to the ACK timeout for the
-    /// DISCONNECT_RESPONSE; a missing/late response does not block or fail
-    /// teardown (the gateway still frees the slot on its own timeout). The
-    /// blocking send runs under `allow_threads`, so the GIL is released
-    /// and the Python event loop never freezes. Idempotent (closing an
-    /// already-closed client sends nothing); later
-    /// write/read/lifecycle_events_json calls raise "tunnel client is
-    /// closed".
+    /// When connected, sends `DISCONNECT_REQUEST` so the gateway can free the
+    /// tunnel slot. The request is timeout-bounded and runs without the GIL; a
+    /// missing or late response does not fail teardown. Closing twice is a no-op.
     fn close(&self, py: Python<'_>) -> PyResult<()> {
         py.allow_threads(|| {
             let mut client = self
@@ -334,7 +327,7 @@ impl NativeTunnelClient {
 
     /// Subscribe to incoming group telegrams (bus indications).
     ///
-    /// Events arriving BEFORE this call are not delivered (broadcast
+    /// Events arriving before this call are not delivered (broadcast
     /// semantics). Errors if the client is closed or a monitor is
     /// already started.
     fn monitor_start(&self, py: Python<'_>) -> PyResult<()> {
@@ -386,7 +379,7 @@ impl NativeTunnelClient {
                     return Err(closed_tunnel_error());
                 }
             }
-            // Take the stream OUT of the mutex for the duration of the wait
+            // Take the stream out of the mutex for the duration of the wait
             // so close()/monitor_started()/monitor_start() never block behind
             // a pending monitor_next; monitor_waiting keeps the subscription
             // observable and prevents concurrent consumers.
@@ -411,7 +404,7 @@ impl NativeTunnelClient {
             let outcome = self.runtime.block_on(async {
                 tokio::time::timeout(Duration::from_millis(timeout_ms), stream.next()).await
             });
-            // Put the subscription back BEFORE clearing the waiting flag
+            // Put the subscription back before clearing the waiting flag
             // unless the client was closed while we waited (close()
             // cleared the slot; do not resurrect it).
             let closed = {
@@ -741,6 +734,12 @@ fn _knxyz(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(discover_gateways_json, m)?)?;
     m.add_class::<NativeTunnelClient>()?;
     m.add_class::<NativeRouteClient>()?;
+    let capsule_name =
+        CString::new("knxyz._knxyz._C_API").expect("static capsule name contains no nul bytes");
+    m.add(
+        "_C_API",
+        PyCapsule::new_bound(m.py(), capi::capi_v1(), Some(capsule_name))?,
+    )?;
 
     Ok(())
 }
@@ -909,12 +908,12 @@ fn dpt_value_from_typed_json(value: &Value) -> PyResult<Option<DptValue>> {
         }
         "energy_i32" => DptValue::EnergyI32(json_i32(json_field(value, "value")?)?),
         "energy_u32" => DptValue::EnergyU32(json_u32(json_field(value, "value")?)?),
-        // i64 (DPT29 V64) crosses JSON as a DECIMAL STRING to survive JS number
-        // precision; parse the string, never as_i64 on a number.
+        // i64 (DPT29 V64) crosses JSON as a decimal string so values outside
+        // JavaScript's safe integer range are preserved exactly.
         "i64" => DptValue::I64(json_i64_str(json_field(value, "value")?)?),
         // char (DPT4) crosses JSON as a 1-char string.
         "char" => DptValue::Char(json_char(json_field(value, "value")?)?),
-        // DPT21/22 raw bitsets cross JSON as a bare u8/u16 number. from-json is
+        // DPT21/22 raw bitsets cross JSON as plain u8/u16 numbers. from-json is
         // for round-trip/marshal only: encode still refuses because mains 21/22
         // are absent from the codec table and Bitset* is rejected by encode_value.
         "bitset8" => DptValue::Bitset8(json_u8(json_field(value, "value")?)?),
@@ -933,7 +932,7 @@ fn dpt_value_to_json(value: DptValue) -> PyResult<String> {
     let value = match value {
         DptValue::Bool(value) => serde_json::json!(value),
         DptValue::U8(value) => serde_json::json!(value),
-        // Float16 (weather 9.004/5/6/7) and Angle (5.003) decode to a bare
+        // Float16 (weather 9.004/5/6/7) and Angle (5.003) decode to a plain
         // JSON number, exactly like Temperature/Scaling — the number carries
         // no unit tag, so non-temperature weather values are not mislabeled
         // (the DPT id at the call site carries the unit). Decode-only.
@@ -1004,10 +1003,9 @@ fn dpt_value_to_json(value: DptValue) -> PyResult<String> {
         DptValue::EnergyU32(value) => {
             serde_json::json!({ "type": "energy_u32", "value": value })
         }
-        // i64 (DPT29 V64) is emitted as a DECIMAL STRING: its range exceeds the
-        // JS safe-integer range (2^53), so a bare JSON number would be silently
-        // corrupted by a JS JSON.parse. Python ints are arbitrary-precision, but
-        // the same string shape is used in both bindings for consistency.
+        // i64 (DPT29 V64) is emitted as a decimal string so values outside
+        // JavaScript's safe integer range are preserved exactly. Python ints are
+        // arbitrary-precision, but the same string shape is used in both bindings.
         DptValue::I64(value) => {
             serde_json::json!({ "type": "i64", "value": value.to_string() })
         }
@@ -1015,7 +1013,7 @@ fn dpt_value_to_json(value: DptValue) -> PyResult<String> {
         DptValue::Char(value) => {
             serde_json::json!({ "type": "char", "value": value.to_string() })
         }
-        // DPT21/22 raw bitsets cross JSON as a bare number (u8/u16 fit the JS
+        // DPT21/22 raw bitsets cross JSON as plain numbers (u8/u16 fit the JS
         // safe-integer range, unlike i64 above which needs a decimal string).
         DptValue::Bitset8(value) => {
             serde_json::json!({ "type": "bitset8", "value": value })
@@ -1093,9 +1091,8 @@ fn json_i32(value: &Value) -> PyResult<i32> {
     i32::try_from(value).map_err(|_| PyValueError::new_err("DPT value is out of i32 range"))
 }
 
-// i64 (DPT29 V64) crosses JSON as a DECIMAL STRING (not a number) so it can
-// carry the full ±9.2e18 range without JS double-precision loss; parse the
-// string rather than reading a (potentially already-rounded) JSON number.
+// i64 (DPT29 V64) crosses JSON as a decimal string so values outside
+// JavaScript's safe integer range are preserved exactly.
 fn json_i64_str(value: &Value) -> PyResult<i64> {
     value
         .as_str()
@@ -1104,7 +1101,7 @@ fn json_i64_str(value: &Value) -> PyResult<i64> {
         .map_err(|_| PyValueError::new_err("DPT value is out of i64 range"))
 }
 
-// char (DPT4) crosses JSON as a string of EXACTLY one character.
+// char (DPT4) crosses JSON as a string of exactly one character.
 fn json_char(value: &Value) -> PyResult<char> {
     let text = value
         .as_str()

@@ -1,8 +1,8 @@
 //! W1: native weather DPT codecs — DPT 9.004 (lux) / 9.005 (wind m/s) /
 //! 9.006 (pressure Pa) / 9.007 (humidity %) decode via the shared 2-octet
-//! KNX float to the unit-agnostic `Float16` variant (NEVER `Temperature`),
+//! KNX float to the unit-agnostic `Float16` variant (never `Temperature`),
 //! and DPT 5.003 (angle) decodes the 1-byte scaled form to `Angle` degrees.
-//! All decode-only (encode loud-fails by inference — see dispatch.rs).
+//! These DPTs are decode-only; encode returns `UnsupportedDpt` by inference.
 //!
 //! The 9.xxx byte examples are the exact pinned xknx 3.15.0 wire bytes
 //! (clean-room observed): DPTLux.to_knx(20000)=[0x57,0xA1] -> 19998.72,
@@ -53,7 +53,7 @@ fn angle_503_decodes_degrees_byte_times_360_over_255() {
     assert_eq!(angle(&[0x00]), 0.0);
     assert_eq!(angle(&[0xFF]), 360.0);
     // unrounded native value (consistent with 5.001 Scaling being
-    // unquantized): 128 * 360 / 255 = 180.7058..., NOT pinned's rounded 181.
+    // unquantized): 128 * 360 / 255 = 180.7058..., not xknx's rounded 181.
     assert!((angle(&[0x80]) - 180.705_88).abs() < 1e-2);
     assert!((angle(&[0x40]) - 90.352_94).abs() < 1e-2);
 }

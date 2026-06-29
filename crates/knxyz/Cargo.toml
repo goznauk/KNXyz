@@ -1,6 +1,6 @@
 [package]
 name = "knxyz"
-version = "0.0.2"
+version = "0.0.3"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
@@ -9,10 +9,14 @@ rust-version.workspace = true
 description = "KNXyz - a KNX library for Rust, Python, and Node.js (primary public facade over the KNX DPT codec and KNXnet/IP client)."
 keywords = ["knx", "knxnet-ip", "dpt", "home-automation", "building-automation"]
 categories = ["network-programming", "encoding"]
+include = ["Cargo.toml", "src/**", "include/**"]
+
+[lib]
+crate-type = ["rlib", "cdylib", "staticlib"]
 
 [dependencies]
 # path is used for local/workspace builds; version is required for crates.io
 # packaging (these crates must be published before knxyz).
-knx-core = { path = "../knx-core", version = "0.0.2" }
-knx-dpt = { path = "../knx-dpt", version = "0.0.2" }
-knx-ip = { path = "../knx-ip", version = "0.0.2" }
+knx-core = { path = "../knx-core", version = "0.0.3" }
+knx-dpt = { path = "../knx-dpt", version = "0.0.3" }
+knx-ip = { path = "../knx-ip", version = "0.0.3" }

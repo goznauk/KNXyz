@@ -47,18 +47,23 @@ PYTHON_SDIST_REQUIRED_SUFFIXES = (
     "/crates/knx-dpt/src/lib.rs",
     "/crates/knx-ip/Cargo.toml",
     "/crates/knx-ip/src/lib.rs",
+    "/crates/knxyz/include/knxyz/capi.h",
     "/knxyz/__init__.py",
     "/knxyz/dpt.py",
+    "/knxyz/capi.pxd",
+    "/knxyz/include/knxyz/capi.h",
     "/knxyz/py.typed",
 )
 
 PYTHON_WHEEL_REQUIRED = (
     "knxyz/__init__.py",
     "knxyz/dpt.py",
+    "knxyz/capi.pxd",
+    "knxyz/include/knxyz/capi.h",
     "knxyz/py.typed",
 )
 
-NODE_ALLOWED_EXACT = {"package.json", "src/index.ts"}
+NODE_ALLOWED_EXACT = {"package.json", "src/index.ts", "index.d.ts"}
 NODE_ALLOWED_PREFIXES = ("index.", "knxyz-node.")
 NODE_ALLOWED_SUFFIXES = (".node",)
 NODE_FORBIDDEN_PREFIXES = ("test/", "scripts/", "node_modules/")
@@ -68,13 +73,12 @@ NODE_FORBIDDEN_EXACT = {
     "build.rs",
     "package-lock.json",
     "src/lib.rs",
-    "index.d.ts",
 }
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--python-dist", type=Path)
+    parser.add_argument("--python-dist", "--python-dir", dest="python_dist", type=Path)
     parser.add_argument("--node-pack-json", type=Path)
     parser.add_argument("--node-package-json", type=Path)
     args = parser.parse_args()
@@ -130,7 +134,12 @@ def check_node_pack_json(pack_json: Path, package_json: Path | None) -> list[str
         return ["npm pack JSON did not contain a package list"]
 
     files = data[0].get("files", [])
-    names = sorted(file_info.get("path", "") for file_info in files)
+    file_sizes = {
+        file_info.get("path", ""): file_info.get("size")
+        for file_info in files
+        if file_info.get("path")
+    }
+    names = sorted(file_sizes)
     if not names:
         failures.append("npm pack JSON listed no files")
 
@@ -143,6 +152,10 @@ def check_node_pack_json(pack_json: Path, package_json: Path | None) -> list[str
 
     if "src/index.ts" not in names:
         failures.append("npm package missing src/index.ts")
+    if "index.d.ts" not in names:
+        failures.append("npm package missing index.d.ts")
+    elif not isinstance(file_sizes.get("index.d.ts"), int) or file_sizes["index.d.ts"] <= 0:
+        failures.append("npm package index.d.ts is empty")
     if not any(is_native_node_artifact(name) for name in names):
         failures.append("npm package missing a native .node artifact")
     failures.extend(check_node_entrypoints(pack_json.parent, names, package_json))
@@ -166,22 +179,57 @@ def check_node_entrypoints(
         return ["could not locate bindings/node/package.json for npm entrypoint checks"]
 
     package_json = json.loads(package_json_path.read_text())
+    declaration_path = package_json_path.parent / "index.d.ts"
+    if not declaration_path.is_file():
+        failures = ["bindings/node/index.d.ts is missing next to package.json"]
+    elif declaration_path.stat().st_size <= 0:
+        failures = ["bindings/node/index.d.ts is empty"]
+    else:
+        failures = []
+
+    package_types = normalize_npm_path(package_json.get("types"))
     required = {
         normalize_npm_path(package_json.get("main")),
-        normalize_npm_path(package_json.get("types")),
+        package_types,
     }
-    exports = package_json.get("exports", {}).get(".", {})
-    if isinstance(exports, dict):
-        required.add(normalize_npm_path(exports.get("types")))
-        required.add(normalize_npm_path(exports.get("import")))
-        required.add(normalize_npm_path(exports.get("default")))
+    exports_root = package_json.get("exports")
+    exports = None
+    export_types = None
+    export_import = None
+    export_default = None
+    if isinstance(exports_root, dict) and isinstance(exports_root.get("."), dict):
+        exports = exports_root["."]
+        export_types = normalize_npm_path(exports.get("types"))
+        export_import = normalize_npm_path(exports.get("import"))
+        export_default = normalize_npm_path(exports.get("default"))
+        required.add(export_types)
+        required.add(export_import)
+        required.add(export_default)
     else:
-        required.add(normalize_npm_path(exports))
+        failures.append("npm package exports['.'] must be an object")
 
-    failures: list[str] = []
+    if package_types != "index.d.ts":
+        failures.append("npm package.json types must point to ./index.d.ts")
+    if export_types != "index.d.ts":
+        failures.append("npm package exports['.'].types must point to ./index.d.ts")
+    if normalize_npm_path(package_json.get("main")) != "src/index.ts":
+        failures.append("npm package.json main must point to ./src/index.ts")
+    if export_import != "src/index.ts":
+        failures.append("npm package exports['.'].import must point to ./src/index.ts")
+    if export_default != "src/index.ts":
+        failures.append("npm package exports['.'].default must point to ./src/index.ts")
+    type_entrypoints: set[str] = set()
     for path in sorted(path for path in required if path):
         if path not in names:
             failures.append(f"npm package entrypoint {path} is not included in tarball")
+    if package_types:
+        type_entrypoints.add(package_types)
+    if isinstance(exports, dict):
+        if export_types:
+            type_entrypoints.add(export_types)
+    for path in sorted(type_entrypoints):
+        if not path.endswith(".d.ts"):
+            failures.append(f"npm package type entrypoint {path} must be a .d.ts file")
     return failures
 
 

@@ -1,0 +1,54 @@
+---
+title: Rust
+description: Rust crate surface for KNXyz.
+---
+
+Use `knxyz` as the public facade crate.
+
+```sh
+cargo add knxyz
+```
+
+```rust
+use knxyz::{dpt, DptValue};
+
+let payload = dpt::encode("9.001", DptValue::Temperature(21.0))?;
+let value = dpt::decode("9.001", &payload)?;
+```
+
+The facade re-exports the DPT codec API and the KNXnet/IP client building
+blocks.
+
+```rust
+use knxyz::ip::TunnelClient;
+use knxyz::{DptValue, GroupAddress};
+use std::net::ToSocketAddrs;
+use std::time::Duration;
+
+let gateway = "192.0.2.10:3671"
+    .to_socket_addrs()?
+    .next()
+    .expect("gateway address");
+let mut client = TunnelClient::connect(gateway).await?;
+
+let value = client
+    .group_read("1/0/0".parse::<GroupAddress>()?, "9.001", Duration::from_secs(3))
+    .await?;
+
+client
+    .group_write("1/2/3".parse::<GroupAddress>()?, DptValue::Bool(true))
+    .await?;
+
+client.disconnect().await?;
+```
+
+Use the facade crate for application code. The lower-level crates are available
+when you need a narrower dependency:
+
+- `knx-core`
+- `knx-dpt`
+- `knx-ip`
+- `knxyz`
+
+The `knxyz` facade also exposes a small raw C ABI for C and C++ consumers. See
+[C ABI](/docs/reference/c-abi).

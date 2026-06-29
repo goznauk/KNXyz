@@ -1,12 +1,11 @@
 //! DPT 232.600 — KNX 3-octet RGB colour, symmetric pure codec.
 //!
 //! The bus form (3 octets R, G, B; each 0..=255) round-trips with
-//! `DptValue::Rgb { red, green, blue }`. The encode side is the OFFLINE pure
-//! codec (`knx_dpt::encode`) only — it does NOT actuate the bus; live colour
-//! writes stay refused at `knx-ip`'s `encode_value` (pinned in that crate's
-//! tests). These tests pin the decode field order, the boundary bytes, the
-//! length contract, the symmetric encode + round-trip, and the wrong-variant
-//! encode rejection.
+//! `DptValue::Rgb { red, green, blue }`. The encode side is the explicit DPT
+//! payload codec (`knx_dpt::encode`); live colour writes stay refused at
+//! `knx-ip`'s `encode_value` (pinned in that crate's tests). These tests pin the
+//! decode field order, the boundary bytes, the length contract, the symmetric
+//! encode + round-trip, and the wrong-variant encode rejection.
 
 use knx_dpt::{decode, encode, DptError, DptValue};
 
@@ -28,9 +27,8 @@ fn dpt232_600_decodes_three_octets_in_rgb_order() {
 
 #[test]
 fn dpt232_600_encodes_three_octets_in_rgb_order() {
-    // encode is the matching 3-octet identity (R, G, B). This is the OFFLINE
-    // pure codec — it does not write to the bus (colour actuation stays refused
-    // in knx-ip's encode_value, pinned there).
+    // encode is the matching 3-octet identity (R, G, B). This is the explicit
+    // DPT payload codec; colour writes stay refused in knx-ip's encode_value.
     assert_eq!(
         encode(
             "232.600",
@@ -75,8 +73,8 @@ fn dpt232_600_round_trips_encode_decode() {
 
 #[test]
 fn dpt232_600_encode_rejects_wrong_variant() {
-    // a non-Rgb variant loud-fails TypeMismatch (the id parses, so it is NOT
-    // UnsupportedDpt). RGBW is not RGB.
+    // a non-Rgb variant returns TypeMismatch because the id parses; it is not
+    // UnsupportedDpt. RGBW is not RGB.
     assert_eq!(
         encode(
             "232.600",

@@ -1,8 +1,14 @@
 import asyncio
 import json
+from pathlib import Path
 
 from . import _knxyz
 from . import dpt
+
+
+def get_include() -> str:
+    """Return the installed include directory for Cython C API consumers."""
+    return str(Path(__file__).with_name("include"))
 
 
 def parse_individual_address(value: str) -> str:
@@ -100,7 +106,7 @@ class RouteClient:
         """Multicast a GroupValueWrite for ``value`` encoded as ``dpt``.
 
         Returns the number of bytes sent. Fire-and-forget: routing has no
-        ack, so a successful send does NOT imply any device received or
+        ack, so a successful send does not imply any device received or
         acted on the telegram, and no local state is mutated.
         """
         return await asyncio.to_thread(
@@ -110,7 +116,7 @@ class RouteClient:
     async def start_monitor(self) -> None:
         """Join the multicast group and start receiving indications.
 
-        Indications arriving BEFORE this call are not delivered: start the
+        Indications arriving before this call are not delivered: start the
         monitor before triggering the traffic you want to observe. Raises
         if the client is closed or a monitor is already started.
         """
@@ -122,13 +128,10 @@ class RouteClient:
     async def monitor_next(self, timeout_ms: int = 3000):
         """Wait for the next incoming RoutingIndication.
 
-        Returns a dict {"source": "a.l.d", "destination": "m/m/s",
-        "apci": "group_value_read" | "group_value_response" |
-        "group_value_write", "payload": [int, ...], "peer": "ip:port"} -
-        the payload stays raw; decode with
-        knxyz.dpt.decode(dpt, bytes(payload)). Fails loudly on timeout,
-        on a closed client, when the monitor was never started, and when
-        the monitor lagged (events dropped).
+        Returns a dict with source, destination, APCI, raw payload bytes, and
+        peer address. Decode payloads with
+        ``knxyz.dpt.decode(dpt, bytes(payload))``. Raises on timeout, a closed
+        client, a missing monitor, or monitor lag.
         """
         event_json = await asyncio.to_thread(
             self._native.monitor_next_json, timeout_ms
@@ -180,14 +183,10 @@ class TunnelClient:
     async def close(self) -> None:
         """Release the native tunnel client deterministically.
 
-        Orderly close: when connected, this sends a real KNXnet/IP
-        DISCONNECT_REQUEST so the gateway frees the tunnel slot
-        immediately. The disconnect is best-effort and timeout-bounded
-        (it waits only up to the native ACK timeout for the
-        DISCONNECT_RESPONSE); a silent gateway never blocks or fails
-        teardown — the request was still sent on the wire. Idempotent
-        (closing an already-closed client sends nothing);
-        write/read/lifecycle_events raise after close.
+        When connected, sends ``DISCONNECT_REQUEST`` so the gateway can free the
+        tunnel slot. The request is timeout-bounded; a missing or late response
+        does not fail teardown. Closing twice is a no-op, and later write, read,
+        or lifecycle-event calls raise after close.
         """
         await asyncio.to_thread(self._native.close)
 
@@ -208,7 +207,7 @@ class TunnelClient:
     async def start_monitor(self) -> None:
         """Subscribe to incoming group telegrams (bus indications).
 
-        Indications arriving BEFORE this call are not delivered
+        Indications arriving before this call are not delivered
         (broadcast semantics): start the monitor before triggering the
         traffic you want to observe. Raises if the client is closed or
         a monitor is already started.
@@ -221,12 +220,9 @@ class TunnelClient:
     async def monitor_next(self, timeout_ms: int = 3000):
         """Wait for the next incoming group telegram.
 
-        Returns a dict {"source": "a.l.d", "destination": "m/m/s",
-        "apci": "group_value_read" | "group_value_response" |
-        "group_value_write", "payload": [int, ...]} - the payload stays
-        raw; decode with knxyz.dpt.decode(dpt, bytes(payload)). Fails
-        loudly on timeout, on a closed client, when the monitor was
-        never started, and when the monitor lagged (events dropped).
+        Returns a dict with source, destination, APCI, and raw payload bytes.
+        Decode payloads with ``knxyz.dpt.decode(dpt, bytes(payload))``. Raises
+        on timeout, a closed client, a missing monitor, or monitor lag.
         """
         event_json = await asyncio.to_thread(
             self._native.monitor_next_json, timeout_ms

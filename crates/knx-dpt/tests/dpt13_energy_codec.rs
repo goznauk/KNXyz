@@ -1,7 +1,7 @@
 //! DPT13 energy semantics for 13.010/13.013/13.014/13.015.
 //!
 //! The four energy subs - 13.010 Wh / 13.013 kWh / 13.014 VAh / 13.015 VARh -
-//! decode to `DptValue::EnergyI32` and have a dedicated symmetric offline encode
+//! decode to `DptValue::EnergyI32` and have a dedicated symmetric payload encode
 //! arm (`dpt13::decode_energy`/`encode_energy`) selected before the uniform table
 //! in `lib.rs` via a sub-agnostic `matches!(id.sub(), 10 | 13 | 14 | 15)` guard.
 //! Every other `13.xxx` (including the 13.001 counter and adjacent unselected
@@ -10,10 +10,10 @@
 //!
 //! This only changes the value's type tag (`I32` -> `EnergyI32`); the raw
 //! 4-octet signed payload is identical and the unit is still discarded. The
-//! offline encode arm accepts both `EnergyI32` (symmetric with decode) and `I32`
+//! payload encode arm accepts both `EnergyI32` (symmetric with decode) and `I32`
 //! (backward compatibility); both produce identical bytes. `EnergyU32` and every
-//! other variant are refused (`TypeMismatch { dpt: "13.xxx" }`). This is an
-//! offline codec only: live energy writes stay refused by knx-ip's
+//! other variant are refused (`TypeMismatch { dpt: "13.xxx" }`). This is a
+//! payload codec: live energy writes stay refused by knx-ip's
 //! `encode_value` variant-keyed write inference.
 //!
 //! These tests cover both halves so any added energy sub updates the selected
@@ -58,7 +58,7 @@ fn dpt13_selected_energy_subs_decode_to_energy_i32() {
 #[test]
 fn dpt13_non_energy_subs_still_decode_to_i32() {
     // the 13.001 counter + adjacent unselected subs stay generic I32 — proves
-    // EnergyI32 does NOT leak past the exact {10,13,14,15} set.
+    // EnergyI32 does not leak past the exact {10,13,14,15} set.
     for dpt in NON_ENERGY_SUBS {
         assert_eq!(
             decode(dpt, &POS_BYTES),
@@ -72,7 +72,7 @@ fn dpt13_non_energy_subs_still_decode_to_i32() {
         );
         assert!(
             !matches!(decode(dpt, &POS_BYTES).unwrap(), DptValue::EnergyI32(_)),
-            "{dpt} must NOT decode to EnergyI32 (not a selected sub)",
+            "{dpt} must not decode to EnergyI32 (not a selected sub)",
         );
     }
 }
@@ -80,18 +80,18 @@ fn dpt13_non_energy_subs_still_decode_to_i32() {
 #[test]
 fn dpt13_selected_energy_subs_offline_encode_is_symmetric() {
     for dpt in SELECTED_SUBS {
-        // offline-encodes EnergyI32 (symmetric with decode_energy)
+        // payload encode accepts EnergyI32 (symmetric with decode_energy)
         assert_eq!(
             encode(dpt, DptValue::EnergyI32(1000)),
             Ok(POS_BYTES.to_vec()),
-            "{dpt} must offline-encode EnergyI32 to its 4-octet payload",
+            "{dpt} must encode EnergyI32 to its 4-octet payload",
         );
         // and still accepts a generic I32 for callers that provide plain signed
         // DPT13 values.
         assert_eq!(
             encode(dpt, DptValue::I32(1000)),
             Ok(POS_BYTES.to_vec()),
-            "{dpt} must still accept a generic I32 on offline encode (backward compat)",
+            "{dpt} must still accept a generic I32 on payload encode (backward compat)",
         );
         // EnergyU32 is refused even for the selected subs because DPT13 is signed;
         // the dedicated arm's tag is the sub-agnostic "13.xxx".
@@ -125,10 +125,10 @@ fn dpt13_non_energy_subs_encode_only_accept_i32() {
             Ok(POS_BYTES.to_vec()),
             "{dpt} must still encode an I32 value",
         );
-        // EnergyI32 stays REFUSED on offline encode for the non-selected subs —
+        // EnergyI32 remains rejected on payload encode for the non-selected subs:
         // the uniform DPT13 macro codec accepts only I32, so a non-I32 variant
         // yields TypeMismatch with the macro's "13.xxx" tag. Proves EnergyI32
-        // does NOT leak into 13.001 or any adjacent unselected 13.xxx.
+        // does not leak into 13.001 or any adjacent unselected 13.xxx.
         assert_eq!(
             encode(dpt, DptValue::EnergyI32(1000)),
             Err(DptError::TypeMismatch { dpt: "13.xxx" }),
@@ -144,12 +144,12 @@ fn dpt13_non_energy_subs_encode_only_accept_i32() {
 }
 
 #[test]
-fn dpt13_energy_subs_invalid_length_loud_fails() {
+fn dpt13_energy_subs_invalid_length_returns_invalid_length() {
     // the switched subs (decode_energy) length-check via be_array::<4>.
     for dpt in SELECTED_SUBS {
         assert!(
             matches!(decode(dpt, &[0x00]), Err(DptError::InvalidLength { .. })),
-            "{dpt} must loud-fail a short payload",
+            "{dpt} must reject a short payload",
         );
     }
 }
@@ -157,9 +157,9 @@ fn dpt13_energy_subs_invalid_length_loud_fails() {
 #[test]
 fn dpt12_001_refuses_energy_u32_and_accepts_u32() {
     // EnergyU32's only positive "real home" would be the unsigned 4-octet main 12
-    // — and even THERE it is refused: main 12 is the uniform U32 codec
+    // — and even there it is refused: main 12 is the uniform U32 codec
     // (`dpt12.rs`), so a non-U32 variant yields TypeMismatch with the macro's
-    // "12.xxx" tag, while a plain U32 still encodes. This pins IN knx-dpt (not
+    // "12.xxx" tag, while a plain U32 still encodes. This pins in knx-dpt (not
     // just the bindings) that EnergyU32 has no positive encode home anywhere.
     assert_eq!(
         encode("12.001", DptValue::EnergyU32(1000)),

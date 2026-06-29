@@ -17,7 +17,7 @@
 //! `1`, `2`, `3`, `4` (decode-only), `5`, `6`, `7`, `8`, `9`, `10`, `11`, `12`,
 //! `13`, `14`, `16`, `17`, `18`, `19`, `20`, `21` (decode-only raw bitset),
 //! `22` (decode-only raw bitset), `29` (decode-only),
-//! `232` (RGB; offline encode + decode, live colour writes refused).
+//! `232` (RGB; DPT payload encode + decode, live colour writes refused).
 //! Groups `1,2,3,6,7,8,10,11,12,13,14,16,17,18,19`
 //! dispatch uniformly (sub number is not inspected — any sub of a supported
 //! main routes to that codec). Eight groups are intentionally **non-uniform**
@@ -27,8 +27,8 @@
 //! - **DPT 4**: `4.001` (ASCII, 7-bit range-checked) and `4.002` (ISO-8859-1 /
 //!   Latin-1, all bytes) decode (decode-only) to `Char`; the character set is
 //!   carried by the DPT id. Any other `4.xxx` is unsupported. Encode is
-//!   unsupported (main 4 is absent from the uniform table and `Char` loud-fails
-//!   in the write-path inference).
+//!   unsupported (main 4 is absent from the uniform table and `Char` is rejected
+//!   by write-path inference).
 //! - **DPT 5**: `5.001` is `Scaling` (0..=100 % ⇄ a single 0..=255 byte,
 //!   lossy); `5.003` decodes to `Angle` (degrees, decode-only); every other
 //!   `5.xxx` is raw `U8` passthrough.
@@ -46,22 +46,22 @@
 //! - **DPT 21 / 22**: `21.xxx` (1-octet B8) decodes (decode-only) to a raw
 //!   `Bitset8(u8)` mask; `22.xxx` (2-octet B16, big-endian) to a raw
 //!   `Bitset16(u16)` mask. Sub-agnostic (the mask is the same for every sub; the
-//!   per-bit meaning is carried by the DPT id and is NOT interpreted — no
+//!   per-bit meaning is carried by the DPT id and is not interpreted — no
 //!   named-bit semantics). Encode is unsupported (mains 21/22 are absent from the
-//!   uniform table and `Bitset8`/`Bitset16` loud-fail in the write-path
-//!   inference — dedicated variants, not a `U8`/`U16` reuse, which would infer to
-//!   the writable `5.010`/`7.001`).
+//!   uniform table and `Bitset8`/`Bitset16` are rejected by write-path inference
+//!   — dedicated variants, not a `U8`/`U16` reuse, which would infer to the
+//!   writable `5.010`/`7.001`).
 //! - **DPT 29**: `29.xxx` (8-octet V64 two's-complement signed integer —
 //!   `29.010` active energy Wh, `29.011` apparent VAh, `29.012` reactive VARh)
 //!   decodes (decode-only) to `I64`; the unit is carried by the DPT id. Encode
-//!   is unsupported (main 29 is absent from the uniform table and `I64`
-//!   loud-fails in the write-path inference). Bindings serialise `I64` as a
-//!   decimal string (the value exceeds the JS safe-integer range).
+//!   is unsupported (main 29 is absent from the uniform table and `I64` is
+//!   rejected by write-path inference). Bindings serialise `I64` as a decimal
+//!   string (the value exceeds the JS safe-integer range).
 //! - **DPT 232**: `232.600` (3-octet RGB colour) decodes to / encodes from
 //!   `Rgb { red, green, blue }` — the symmetric pure codec round-trips. Main 232
 //!   is absent from the uniform table (an explicit dpt-id-keyed arm). Encode
-//!   here is the OFFLINE byte transform only; live colour **writes** stay
-//!   refused (the `Rgb` variant is in `knx-ip`'s `encode_value` refusal arm).
+//!   here is the DPT byte transform; colour writes stay refused (the `Rgb`
+//!   variant is in `knx-ip`'s `encode_value` refusal arm).
 //!
 //! # Unsupported / malformed
 //!
@@ -151,7 +151,7 @@ type DecodeFn = fn(&[u8]) -> Result<DptValue>;
 ///
 /// DPT 5 (sub-typed: `5.001` scaling, `5.003` angle decode, else raw
 /// `U8`) and DPT 9 (`9.001` temperature encode/decode; `9.002`..=`9.011` +
-/// `9.020`..=`9.030` 2-octet floats decode-only) are intentionally NOT in
+/// `9.020`..=`9.030` 2-octet floats decode-only) are intentionally not in
 /// this table — their dispatch is not uniform and is handled explicitly
 /// in `encode` / `decode`. Keeping the uniform mapping in one place means
 /// the encode and decode sides cannot drift.
@@ -184,17 +184,16 @@ pub fn encode(dpt: &str, value: DptValue) -> Result<std::vec::Vec<u8>> {
         5 => dpt5::encode(dpt, value),
         9 if id.sub() == 1 => dpt9::encode(value),
         // 232.600 RGB — the pure dpt-id-keyed codec (round-trips with decode).
-        // Main 232 is NOT in UNIFORM_CODECS, so this explicit arm is the only
-        // encode path; it is the OFFLINE byte transform, not actuation. Live
-        // colour writes stay refused: the `Rgb` variant is kept in knx-ip's
-        // `encode_value` (variant-keyed) refusal arm.
+        // Main 232 is not in UNIFORM_CODECS, so this explicit arm is the only
+        // encode path. Colour writes stay refused: the `Rgb` variant is kept in
+        // knx-ip's `encode_value` (variant-keyed) refusal arm.
         232 => dpt232::encode(value),
         // 13.010/13.013/13.014/13.015 energy (Wh/kWh/VAh/VARh) — the four switched
         // energy subs. The guard is `id.main()==13 && matches!(id.sub(), 10 | 13 |
         // 14 | 15)` (an exact closed set, no ranges); every other 13.xxx (incl the
         // 13.001 counter + adjacent unselected subs) falls through to the uniform
-        // (13, …) macro codec below (I32-only). The offline arm accepts EnergyI32
-        // (symmetric with dpt13::decode_energy) AND I32 (backward compat) →
+        // (13, …) macro codec below (I32-only). This payload arm accepts EnergyI32
+        // (symmetric with dpt13::decode_energy) and I32 (backward compat) as
         // identical 4 bytes; EnergyU32 and all else refuse. Live energy writes
         // stay refused at knx-ip `encode_value` (variant-keyed).
         13 if matches!(id.sub(), 10 | 13 | 14 | 15) => dpt13::encode_energy(value),
@@ -215,7 +214,7 @@ pub fn decode(dpt: &str, bytes: &[u8]) -> Result<DptValue> {
         // bytes) — decode-only to DptValue::Char, sub-aware (the character set
         // is carried by the DPT id). Any other 4.xxx stays UnsupportedDpt. Main
         // 4 is absent from UNIFORM_CODECS so encode stays UnsupportedDpt, and
-        // Char loud-fails in knx-ip encode_value (decode-only isolation).
+        // Char is rejected by knx-ip encode_value (decode-only isolation).
         4 if id.sub() == 1 => dpt4::decode_ascii(bytes),
         4 if id.sub() == 2 => dpt4::decode_latin1(bytes),
         5 => dpt5::decode(dpt, bytes),
@@ -232,24 +231,23 @@ pub fn decode(dpt: &str, bytes: &[u8]) -> Result<DptValue> {
         20 if id.sub() == 105 => dpt20::decode_controller_mode(bytes),
         // 29.xxx V64 (8-octet two's-complement signed energy) — decode-only to
         // DptValue::I64. Sub-agnostic (29.010 Wh/29.011 VAh/29.012 VARh share
-        // one codec; unit by DPT id). Main 29 is intentionally NOT in
+        // one codec; unit by DPT id). Main 29 is intentionally not in
         // UNIFORM_CODECS, so encode("29.xxx", …) stays UnsupportedDpt, and I64
-        // loud-fails in knx-ip encode_value (decode-only isolation).
+        // is rejected by knx-ip encode_value (decode-only isolation).
         29 => dpt29::decode(bytes),
         // 21.xxx B8 (1 octet) -> DptValue::Bitset8 raw mask; 22.xxx B16 (2 octets,
-        // big-endian) -> DptValue::Bitset16 raw mask. DECODE-ONLY, sub-agnostic by
-        // main (the mask is identical for every sub; the per-bit meaning is carried
-        // by the DPT id and is NOT interpreted). Mains 21/22 are intentionally NOT
-        // in UNIFORM_CODECS, so encode("21.xxx"/"22.xxx", …) stays UnsupportedDpt,
-        // and Bitset8/Bitset16 loud-fail in knx-ip encode_value (decode-only
-        // isolation — NOT a U8/U16 reuse, which would infer to writable 5.010/7.001).
+        // big-endian) -> DptValue::Bitset16 raw mask. Decoding is supported;
+        // encoding is not, and the codec is sub-agnostic by main. Mains 21/22
+        // are intentionally not in UNIFORM_CODECS, so encode("21.xxx"/"22.xxx",
+        // …) stays UnsupportedDpt, and Bitset8/Bitset16 are rejected by knx-ip
+        // encode_value (decode-only isolation, not a U8/U16 reuse).
         21 => dpt21::decode(bytes),
         22 => dpt22::decode(bytes),
         // 232.600 RGB colour (3 octets R/G/B) <-> DptValue::Rgb (symmetric pure
         // codec; the encode side is the matching explicit arm in `encode`).
-        // Main 232 is intentionally NOT in UNIFORM_CODECS. The codec round-trips
-        // OFFLINE, but live colour writes stay refused: `Rgb` is in knx-ip's
-        // `encode_value` (variant-keyed write inference) refusal arm.
+        // Main 232 is intentionally not in UNIFORM_CODECS. The codec
+        // round-trips payload bytes, but colour writes stay refused: `Rgb` is in
+        // knx-ip's `encode_value` (variant-keyed write inference) refusal arm.
         232 => dpt232::decode(bytes),
         // 13.010/13.013/13.014/13.015 energy (Wh/kWh/VAh/VARh) — the four switched
         // energy subs: decode to the energy-tagged EnergyI32 rather than the

@@ -1,0 +1,115 @@
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+}
+
+.home {
+  min-height: 100vh;
+  padding: 48px 24px 72px;
+}
+
+.home__inner {
+  margin: 0 auto;
+  max-width: 960px;
+}
+
+.home__nav {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 96px;
+}
+
+.home__brand {
+  color: inherit;
+  font-size: 18px;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.home__link {
+  color: inherit;
+  font-size: 14px;
+  text-decoration: none;
+}
+
+.home__hero {
+  max-width: 720px;
+}
+
+.home__hero h1 {
+  font-size: clamp(42px, 8vw, 76px);
+  letter-spacing: 0;
+  line-height: 0.95;
+  margin: 0 0 24px;
+}
+
+.home__hero p {
+  color: #52525b;
+  font-size: 19px;
+  line-height: 1.7;
+  margin: 0 0 36px;
+  max-width: 640px;
+}
+
+.home__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.home__button {
+  border: 1px solid #18181b;
+  border-radius: 8px;
+  color: #18181b;
+  display: inline-flex;
+  font-size: 15px;
+  font-weight: 560;
+  padding: 11px 16px;
+  text-decoration: none;
+}
+
+.home__button--primary {
+  background: #18181b;
+  color: white;
+}
+
+.home__grid {
+  border-top: 1px solid #e4e4e7;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 96px;
+  padding-top: 32px;
+}
+
+.home__grid h2 {
+  font-size: 18px;
+  margin: 0 0 8px;
+}
+
+.home__grid p {
+  color: #52525b;
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+@media (max-width: 720px) {
+  .home {
+    padding: 28px 18px 56px;
+  }
+
+  .home__nav {
+    margin-bottom: 64px;
+  }
+
+  .home__grid {
+    grid-template-columns: 1fr;
+    margin-top: 64px;
+  }
+}

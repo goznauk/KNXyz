@@ -1,14 +1,12 @@
 //! DPT 22.xxx — KNX B16, a 2-octet raw bitset (e.g. 22.100 DHW Controller
 //! Status, 22.101 RHCC Status, 22.1000 Media).
 //!
-//! DECODE-ONLY: the two octets are decoded big-endian to a [`DptValue::Bitset16`]
-//! raw `u16` mask. This is the raw mask ONLY — the per-bit meaning is carried by
-//! the DPT id and is NOT interpreted here (no named-bit semantics). Every 22.xxx
-//! sub is the same 2-octet B16, so they all share this one sub-agnostic codec. No
-//! encode is provided — main 22 is intentionally absent from the uniform codec
-//! table, so `encode("22.xxx", …)` stays [`DptError::UnsupportedDpt`], and the
-//! `Bitset16` variant additionally loud-fails in `knx-ip`'s `encode_value`
-//! write-path inference, so a decoded mask can never be silently written.
+//! Decoding is supported; encoding is not. The two octets are decoded big-endian
+//! to a [`DptValue::Bitset16`] raw `u16` mask. The per-bit meaning is carried by
+//! the DPT id and is not interpreted here, so every 22.xxx sub shares this
+//! sub-agnostic codec. Main 22 is intentionally absent from the uniform codec
+//! table, so `encode("22.xxx", …)` returns [`DptError::UnsupportedDpt`], and
+//! the `Bitset16` variant is rejected by `knx-ip` write-path inference.
 //!
 //! [`DptError::UnsupportedDpt`]: crate::DptError::UnsupportedDpt
 

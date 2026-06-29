@@ -1,14 +1,13 @@
-//! Offline DPT encode/decode example (default-safe, print-only).
+//! KNXyz example: DPT codec.
 //!
-//! This example does not connect to a KNX bus. It encodes and decodes KNX
-//! datapoint values from local bytes only, so it needs no network and no KNX
-//! hardware. The Rust examples package depends on the public `knxyz` facade.
-//! See examples/README.md to run it locally.
+//! This example encodes KNX datapoint values into payload bytes and decodes them
+//! back. The Rust examples package depends on the public `knxyz` facade. See
+//! examples/README.md to run it locally.
 
 use knxyz::dpt::{decode, encode, DptValue};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Scalar DPTs round-trip to a bare DptValue variant.
+    // Scalar DPTs round-trip to a plain DptValue variant.
     let cases: [(&str, &str, DptValue); 5] = [
         ("1.001", "switch (boolean)", DptValue::Bool(true)),
         ("9.001", "temperature (degC, Float16)", DptValue::Temperature(21.0)),
@@ -34,7 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         );
     }
 
-    println!("offline round-trip: {}", if ok { "all OK" } else { "FAILED" });
+    println!("DPT codec round-trip: {}", if ok { "all OK" } else { "FAILED" });
     if !ok {
         std::process::exit(1);
     }

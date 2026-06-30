@@ -1,6 +1,6 @@
 {
   "name": "@knxyz/knx",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "KNX datapoint codecs and KNXnet/IP client bindings for Node.js.",
   "license": "MIT",
   "author": {

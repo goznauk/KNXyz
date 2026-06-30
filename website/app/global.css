@@ -49,7 +49,7 @@ body {
 }
 
 .home__hero p {
-  color: #52525b;
+  color: var(--color-fd-muted-foreground);
   font-size: 19px;
   line-height: 1.7;
   margin: 0 0 36px;
@@ -63,9 +63,9 @@ body {
 }
 
 .home__button {
-  border: 1px solid #18181b;
+  border: 1px solid var(--color-fd-border);
   border-radius: 8px;
-  color: #18181b;
+  color: var(--color-fd-foreground);
   display: inline-flex;
   font-size: 15px;
   font-weight: 560;
@@ -74,12 +74,13 @@ body {
 }
 
 .home__button--primary {
-  background: #18181b;
-  color: white;
+  background: var(--color-fd-primary);
+  border-color: var(--color-fd-primary);
+  color: var(--color-fd-primary-foreground);
 }
 
 .home__grid {
-  border-top: 1px solid #e4e4e7;
+  border-top: 1px solid var(--color-fd-border);
   display: grid;
   gap: 24px;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -93,7 +94,7 @@ body {
 }
 
 .home__grid p {
-  color: #52525b;
+  color: var(--color-fd-muted-foreground);
   font-size: 15px;
   line-height: 1.6;
   margin: 0;

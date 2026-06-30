@@ -22,18 +22,18 @@ checksum = "c39754e157331b013978ec91992bde1ac089843443c49cbc7f46150b0fad0893"
 
 [[package]]
 name = "knx-core"
-version = "0.0.3"
+version = "0.0.4"
 
 [[package]]
 name = "knx-dpt"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "thiserror",
 ]
 
 [[package]]
 name = "knx-ip"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "futures-core",
  "knx-core",
@@ -46,7 +46,7 @@ dependencies = [
 
 [[package]]
 name = "knxyz"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "knx-core",
  "knx-dpt",
@@ -55,7 +55,7 @@ dependencies = [
 
 [[package]]
 name = "knxyz-rust-examples"
-version = "0.0.3"
+version = "0.0.4"
 dependencies = [
  "knxyz",
  "tokio",

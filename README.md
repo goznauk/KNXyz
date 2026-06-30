@@ -1,5 +1,10 @@
 # KNXyz
 
+[![crates.io](https://img.shields.io/crates/v/knxyz.svg)](https://crates.io/crates/knxyz)
+[![PyPI](https://img.shields.io/pypi/v/knxyz.svg)](https://pypi.org/project/knxyz/)
+[![npm](https://img.shields.io/npm/v/@knxyz/knx.svg)](https://www.npmjs.com/package/@knxyz/knx)
+[![Docs](https://img.shields.io/badge/docs-knxyz.io-blue.svg)](https://knxyz.io)
+
 KNXyz is a KNX library for Rust, Python, and Node.js.
 
 KNXyz is early software and unstable.
